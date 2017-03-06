@@ -14,7 +14,7 @@ CFLAGS += -MD
 CFLAGS += -std=gnu11 -m32 -c
 CFLAGS += -I .
 CFLAGS += -O0
-CFLAGS += -fno-builtin
+CFLAGS += -fno-builtin -fno-stack-protector
 CFLAGS += -ggdb3
 
 QEMU_OPTIONS := -serial stdio
@@ -26,6 +26,9 @@ QEMU_DEBUG_OPTIONS += -s
 
 GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
 GDB_OPTIONS += -ex "symbol $(KERNEL)"
+GDB_OPTIONS += -ex "b *0x7c00"
+GDB_OPTIONS += -ex "b main"
+GDB_OPTIONS += -ex "c"
 
 OBJ_DIR        := obj
 LIB_DIR        := lib
