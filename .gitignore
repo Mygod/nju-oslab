@@ -1,2 +1,6 @@
 *.o
-mbr
+*.bin
+CMake*
+cmake*
+.idea/
+obj/
