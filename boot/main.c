@@ -33,15 +33,17 @@ readsect(void *dst, uint32_t offset, uint8_t count)
   insl(0x1F0, dst, SECTSIZE/4 * count);
 }
 
+// dead loops are introduced for diagnosis
 void bootloader() {
   uint8_t header[SECTSIZE * SECTCOUNT];
   readsect(header, 1, SECTCOUNT);
   struct ELFHeader *elfheader = (struct ELFHeader *) header;
+  if (elfheader->magic != 0x464C457FU) for (;;);  // "\x7FELF" in little endian
   struct ProgramHeader *ph = (struct ProgramHeader *) (header + elfheader->phoff);
   for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) {
-    // assert(!(ph->off & ~(SECTSIZE - 1))); // aligned at sector
+    if (ph->off & (SECTSIZE - 1)) for (;;);  // aligned at sector
     int sectors = (ph->filesz + (SECTSIZE - 1)) / SECTSIZE;
-    // assert(sectors < 256);                // things can be read in one go
+    if (sectors >= 256) for (;;);            // things can be read in one go
     readsect((void *) ph->paddr, 1 + ph->off / SECTSIZE, (uint8_t) sectors);
     memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
   }
