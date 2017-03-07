@@ -28,9 +28,11 @@ void trap(struct Trapframe *tf) {
   // of GCC rely on DF being clear
   __asm __volatile("cld" ::: "cc");
 
+  static int base = 0;
   switch (tf->tf_trapno) {
     case IRQ_OFFSET + IRQ_TIMER:
-      //printk("Kernel: Timer elapsed!\n");
+      for (int i = 0; i < 320 * 200; ++i) *((uint8_t *) 0xA0000 + i) = (uint8_t) (base + i);
+      ++base;
       irq_eoi();
       break;
     case IRQ_OFFSET + IRQ_KBD:

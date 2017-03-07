@@ -55,9 +55,9 @@ KERNEL_O := $(KERNEL_C:%.c=$(OBJ_DIR)/%.o)
 KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(KERNEL)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=10240         > /dev/null
-	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null
-	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null
+	@$(DD) if=/dev/zero of=$(IMAGE) count=10240         > /dev/null 2> /dev/null
+	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
+	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null 2> /dev/null
 
 $(BOOT): $(BOOT_O)
 	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
@@ -83,7 +83,7 @@ $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 
 $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
 	mkdir -p $(OBJ_DIR)/$(dir $<)
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -Wno-error=main -Wno-main $< -o $@
 
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)

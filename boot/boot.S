@@ -22,22 +22,31 @@ seta20.2:
   movb    $0xdf,%al               # 0xdf -> port 0x60
   outb    %al,$0x60
 
+# Mode 13h
+  movw  $0x13, %ax
+  int   $0x10
+
+# VBE mode
+# movw  $0x4f02, %ax
+# movw  $0x0118, %bx    # 1280×1024 24-bit mode
+# int   $0x10
+
   lgdt gdtdesc
   movl %cr0, %eax
-  orl  $0x1, %eax   # Protected mode enable flag
+  orl  $0x1, %eax       # Protected mode enable flag
   movl %eax, %cr0
   ljmp $0x8, $next
 
 .code32
 next:
-  movw $0x10, %ax   # Data segment selector
-  movw %ax, %ds
-  movw %ax, %es
-  movw %ax, %fs
-  movw %ax, %gs
-  movw %ax, %ss
-  movl $start, %esp
-  call bootloader
+  movw  $0x10, %ax      # Data segment selector
+  movw  %ax, %ds
+  movw  %ax, %es
+  movw  %ax, %fs
+  movw  %ax, %gs
+  movw  %ax, %ss
+  movl  $start, %esp
+  call  bootloader
 
 .p2align 2
 gdt:
