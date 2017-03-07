@@ -12,7 +12,7 @@ GDB     := gdb
 CFLAGS := -Wall -Werror -Wfatal-errors
 CFLAGS += -MD
 CFLAGS += -std=gnu11 -m32 -c
-CFLAGS += -I .
+CFLAGS += -I include
 CFLAGS += -O0
 CFLAGS += -fno-builtin -fno-stack-protector
 CFLAGS += -ggdb3

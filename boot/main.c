@@ -1,6 +1,6 @@
 #include <string.h>
-#include "include/elf.h"
-#include "include/x86.h"
+#include "elf.h"
+#include "x86.h"
 
 #define SECTSIZE 512
 #define SECTCOUNT 8
