@@ -52,28 +52,51 @@ char* utoa(unsigned value, char* result, int base) {
   return result;
 }
 
+static void vprintk(const char *format, va_list args) {
+  char buffer[16];
+  for (const char *i = format; *i; ++i) if (*i != '%') serial_putchar((uint8_t) *i); else switch (*++i) {
+    case 'c':
+      serial_putchar(va_arg(args, int));
+      break;
+    case 'd':
+      itoa(va_arg(args, int), buffer);
+      for (char *j = buffer; *j; ++j) serial_putchar((uint8_t) *j);
+      break;
+    case 's':
+      for (char *j = va_arg(args, char *); *j; ++j) serial_putchar((uint8_t) *j);
+      break;
+    case 'x':
+      utoa(va_arg(args, unsigned), buffer, 16);
+      for (char *j = buffer; *j; ++j) serial_putchar((uint8_t) *j);
+      break;
+    default:
+      serial_putchar((uint8_t) *i);
+      break;
+  }
+}
+
 void printk(const char *format, ...) {
   va_list args;
   va_start(args, format);
-  char buffer[16];
-  for (const char *i = format; *i; ++i) if (*i != '%') serial_putchar((uint8_t) *i); else switch (*++i) {
-        case 'c':
-          serial_putchar(va_arg(args, int));
-          break;
-        case 'd':
-          itoa(va_arg(args, int), buffer);
-          for (char *j = buffer; *j; ++j) serial_putchar((uint8_t) *j);
-          break;
-        case 's':
-          for (char *j = va_arg(args, char *); *j; ++j) serial_putchar((uint8_t) *j);
-          break;
-        case 'x':
-          utoa(va_arg(args, unsigned), buffer, 16);
-          for (char *j = buffer; *j; ++j) serial_putchar((uint8_t) *j);
-          break;
-        default:
-          serial_putchar((uint8_t) *i);
-          break;
-      }
+  vprintk(format, args);
   va_end(args);
+}
+
+void _warn(const char* file, int line, const char* format, ...) {
+  printk("Warning (%s:%d): ", file, line);
+  va_list args;
+  va_start(args, format);
+  vprintk(format, args);
+  va_end(args);
+  printk("\n");
+}
+__attribute__((noreturn)) void _panic(const char* file, int line, const char* format, ...) {
+  __asm __volatile("cli; cld");
+  printk("Fatal (%s:%d): ", file, line);
+  va_list args;
+  va_start(args, format);
+  vprintk(format, args);
+  va_end(args);
+  printk("\n");
+  for (;;) __asm __volatile("hlt");
 }

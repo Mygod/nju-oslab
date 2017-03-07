@@ -5,7 +5,7 @@
 
 #include "stdio.h"
 
-static void test_printk() {
+static inline void test_printk() {
   printk("Printk test begin...\n");
   printk("the answer should be:\n");
   printk("#######################################################\n");

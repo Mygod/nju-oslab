@@ -12,13 +12,13 @@ GDB     := gdb
 CFLAGS := -Wall -Werror -Wfatal-errors
 CFLAGS += -MD
 CFLAGS += -std=gnu11 -m32 -c
-CFLAGS += -I include
+CFLAGS += -I . -I include
 CFLAGS += -O0
 CFLAGS += -fno-builtin -fno-stack-protector
 CFLAGS += -ggdb3
 
 QEMU_OPTIONS := -serial stdio
-QEMU_OPTIONS += -d int
+#QEMU_OPTIONS += -d int
 QEMU_OPTIONS += -monitor telnet:127.0.0.1:1111,server,nowait #telnet monitor
 
 QEMU_DEBUG_OPTIONS := -S
@@ -26,8 +26,9 @@ QEMU_DEBUG_OPTIONS += -s
 
 GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
 GDB_OPTIONS += -ex "symbol $(KERNEL)"
-GDB_OPTIONS += -ex "b *0x7c00"
+#GDB_OPTIONS += -ex "b *0x7c00"
 GDB_OPTIONS += -ex "b main"
+GDB_OPTIONS += -ex "b trap"
 GDB_OPTIONS += -ex "c"
 
 OBJ_DIR        := obj
