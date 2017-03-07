@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <string.h>
 #include "include/elf.h"
 #include "include/x86.h"
@@ -26,11 +25,14 @@ readsect(void *dst, uint32_t offset, uint8_t count)
   outb(0x1F6, (uint8_t) ((offset >> 24) | 0xE0));
   outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
 
-  // wait for disk to be ready
-  waitdisk();
+  while (count--) {
+    // wait for disk to be ready
+    waitdisk();
 
-  // read sectors
-  insl(0x1F0, dst, SECTSIZE/4 * count);
+    // read sectors
+    insl(0x1F0, dst, SECTSIZE/4);
+    dst += SECTSIZE;
+  }
 }
 
 // dead loops are introduced for diagnosis
