@@ -55,7 +55,7 @@ KERNEL_O := $(KERNEL_C:%.c=$(OBJ_DIR)/%.o)
 KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(KERNEL)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=10000         > /dev/null
+	@$(DD) if=/dev/zero of=$(IMAGE) count=10240         > /dev/null
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null
 	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null
 
