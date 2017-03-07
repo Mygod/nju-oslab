@@ -79,8 +79,7 @@ void printk(const char *format, ...) {
   va_end(args);
 }
 
-int main() {
-  serial_init();
+void test_printk() {
   printk("Printk test begin...\n");
   printk("the answer should be:\n");
   printk("#######################################################\n");
@@ -103,6 +102,11 @@ int main() {
   printk("%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
   printk("=======================================================\n");
   printk("Test end!!! Good luck!!!\n");
+}
+
+int main() {
+  serial_init();
+  test_printk();
   terminate;
   return 0;
 }
