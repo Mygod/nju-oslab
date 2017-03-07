@@ -1,10 +1,7 @@
 #include "irq.h"
 #include "memlayout.h"
-#include "mmu.h"
 #include "stdio.h"
 #include "trap.h"
-#include "types.h"
-#include "x86.h"
 
 /* Interrupt descriptor table.  (Must be built at run time because
  * shifted function addresses can't be represented in relocation records.)
@@ -28,15 +25,18 @@ void trap(struct Trapframe *tf) {
   // of GCC rely on DF being clear
   __asm __volatile("cld" ::: "cc");
 
-  static int base = 0;
+  static int base = 1;
+  uint8_t code;
   switch (tf->tf_trapno) {
     case IRQ_OFFSET + IRQ_TIMER:
-      for (int i = 0; i < 320 * 200; ++i) *((uint8_t *) 0xA0000 + i) = (uint8_t) (base + i);
-      ++base;
+      for (int i = 0; i < 320 * 200; ++i) *((uint8_t *) 0xA0000 + i) = (uint8_t) (base + i + i);
+      base += 2;
       irq_eoi();
       break;
     case IRQ_OFFSET + IRQ_KBD:
-      printk("Kernel: Keyboard 0x%x pressed!\n", inb(0x60));
+      code = inb(0x60);
+      printk("Kernel: Keyboard 0x%x pressed!\n", code);
+      base = (base & ~1) | (code >> 7);
       irq_eoi();
       break;
   }
