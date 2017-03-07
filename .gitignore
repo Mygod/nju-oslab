@@ -4,3 +4,4 @@ CMake*
 cmake*
 .idea/
 obj/
+*.tar.gz
