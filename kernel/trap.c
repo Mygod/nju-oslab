@@ -21,6 +21,7 @@ void trap_init() {
   lidt(&idt_pd);
 }
 
+extern uint32_t syscall_dispatch(struct Trapframe *tf);
 void trap(struct Trapframe *tf) {
   // The environment may have set DF and some versions
   // of GCC rely on DF being clear
@@ -29,6 +30,9 @@ void trap(struct Trapframe *tf) {
   static int base = 1;
   uint8_t code;
   switch (tf->tf_trapno) {
+    case T_SYSCALL:
+      tf->tf_regs.reg_eax = syscall_dispatch(tf);
+      break;
     case IRQ_OFFSET + IRQ_TIMER:
       for (int i = 0; i < 320 * 200; ++i) *((uint8_t *) 0xA0000 + i) = (uint8_t) (base + i + i);
       base += 2;

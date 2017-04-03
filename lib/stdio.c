@@ -1,6 +1,7 @@
 #include <stdarg.h>
 
-#include "serial.h"
+#include "syscall.h"
+#include "types.h"
 
 /**
  * C++ version 0.4 char* style "itoa":
@@ -74,7 +75,7 @@ static size_t vsnprintf(char *out, size_t size, const char *format, va_list args
       for (char *j = buffer; *j; ++j) PUT_AND_CHECK(*j);
       break;
     default:
-      serial_putchar((uint8_t) *i);
+      PUT_AND_CHECK((uint8_t) *i);
       break;
   }
   PUT_AND_CHECK('\0');
@@ -92,7 +93,7 @@ void vprintk(const char *format, va_list args) {
 #pragma clang diagnostic pop
   char out[size];
   vsnprintf(out, size, format, args);
-  for (size_t i = 0; i < size; ++i) serial_putchar((uint8_t) out[i]);
+  sys_printk(out, size);
 }
 
 void printk(const char *format, ...) {
