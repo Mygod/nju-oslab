@@ -12,6 +12,7 @@ extern uint32_t trap_handlers[];
 
 void trap_init() {
   for (int i = 0; i < 256 ; i++) SETGATE(idt[i], 0, GD_KT, trap_handlers[i], 0);
+  // the following traps are available for user processes
   // init break point
   SETGATE(idt[T_BRKPT], 0, GD_KT, trap_handlers[T_BRKPT], 3);
   // init syscall
