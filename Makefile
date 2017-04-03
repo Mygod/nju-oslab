@@ -10,6 +10,7 @@ QEMU    := qemu-system-i386
 GDB     := gdb
 
 CFLAGS := -Wall -Werror -Wfatal-errors
+CFLAGS += -Wno-unknown-pragmas -Wno-error=unknown-pragmas
 CFLAGS += -MD
 CFLAGS += -std=gnu11 -m32 -c
 CFLAGS += -I . -I include

@@ -1,7 +1,6 @@
 #include <stdarg.h>
 
 #include "serial.h"
-#include "types.h"
 
 /**
  * C++ version 0.4 char* style "itoa":
@@ -52,27 +51,48 @@ char* utoa(unsigned value, char* result, int base) {
   return result;
 }
 
-static void vprintk(const char *format, va_list args) {
+static size_t vsnprintf(char *out, size_t size, const char *format, va_list args) {
   char buffer[16];
-  for (const char *i = format; *i; ++i) if (*i != '%') serial_putchar((uint8_t) *i); else switch (*++i) {
+  size_t counter = 0;
+#define PUT_AND_CHECK(c) do {               \
+    if (counter < size) out[counter] = (c); \
+    ++counter;                              \
+  } while (false)
+  for (const char *i = format; *i; ++i) if (*i != '%') PUT_AND_CHECK(*i); else switch (*++i) {
     case 'c':
-      serial_putchar(va_arg(args, int));
+      PUT_AND_CHECK(va_arg(args, int));
       break;
     case 'd':
       itoa(va_arg(args, int), buffer);
-      for (char *j = buffer; *j; ++j) serial_putchar((uint8_t) *j);
+      for (char *j = buffer; *j; ++j) PUT_AND_CHECK(*j);
       break;
     case 's':
-      for (char *j = va_arg(args, char *); *j; ++j) serial_putchar((uint8_t) *j);
+      for (char *j = va_arg(args, char *); *j; ++j) PUT_AND_CHECK(*j);
       break;
     case 'x':
       utoa(va_arg(args, unsigned), buffer, 16);
-      for (char *j = buffer; *j; ++j) serial_putchar((uint8_t) *j);
+      for (char *j = buffer; *j; ++j) PUT_AND_CHECK(*j);
       break;
     default:
       serial_putchar((uint8_t) *i);
       break;
   }
+  PUT_AND_CHECK('\0');
+#undef PUT_AND_CHECK
+  return counter;
+}
+
+void vprintk(const char *format, va_list args) {
+  va_list copy;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
+  va_copy(copy, args);                            // make a copy before reading on
+  size_t size = vsnprintf(NULL, 0, format, copy); // use the copy to calculate size
+  va_end(copy);
+#pragma clang diagnostic pop
+  char out[size];
+  vsnprintf(out, size, format, args);
+  for (size_t i = 0; i < size; ++i) serial_putchar((uint8_t) out[i]);
 }
 
 void printk(const char *format, ...) {
