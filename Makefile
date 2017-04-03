@@ -1,5 +1,6 @@
 BOOT   := boot.bin
 KERNEL := kernel.bin
+USER   := user.bin
 IMAGE  := disk.bin
 
 CC      := gcc
@@ -36,9 +37,11 @@ OBJ_DIR        := obj
 LIB_DIR        := lib
 BOOT_DIR       := boot
 KERNEL_DIR     := kernel
+USER_DIR       := user
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
+OBJ_USER_DIR   := $(OBJ_DIR)/$(USER_DIR)
 
 LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
 
@@ -55,10 +58,14 @@ KERNEL_S := $(wildcard $(KERNEL_DIR)/*.S)
 KERNEL_O := $(KERNEL_C:%.c=$(OBJ_DIR)/%.o)
 KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 
-$(IMAGE): $(BOOT) $(KERNEL)
+USER_C := $(shell find $(USER_DIR) -name "*.c")
+USER_O := $(USER_C:%.c=$(OBJ_DIR)/%.o)
+
+$(IMAGE): $(BOOT) $(KERNEL) $(USER)
 	@$(DD) if=/dev/zero of=$(IMAGE) count=10240         > /dev/null 2> /dev/null
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
 	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null 2> /dev/null
+	# TODO: Add USER
 
 $(BOOT): $(BOOT_O)
 	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
@@ -78,6 +85,9 @@ $(KERNEL): $(LD_SCRIPT)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
 	$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
+$(USER): $(USER_O) $(LIB_O)
+	$(LD) -m elf_i386 -emain -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 	@mkdir -p $(OBJ_LIB_DIR)
 	$(CC) $(CFLAGS) $< -o $@
@@ -85,6 +95,10 @@ $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
 $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
 	mkdir -p $(OBJ_DIR)/$(dir $<)
 	$(CC) $(CFLAGS) -Wno-error=main -Wno-main $< -o $@
+
+$(OBJ_USER_DIR)/%.o: $(USER_DIR)/%.c
+	mkdir -p $(OBJ_DIR)/$(dir $<)
+	$(CC) $(CFLAGS) $< -o $@
 
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
