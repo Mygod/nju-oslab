@@ -83,7 +83,7 @@ static inline void pit_init(int hz) {
   outb(PORT_CH_0, (uint8_t) ((counter >> 8) & 0xFF));  // access high byte
 }
 
-extern void trap_init();
+extern void env_init();
 
 int main() {
   serial_init();
@@ -92,7 +92,7 @@ int main() {
   // Interrupt 1: Keyboard
   // Interrupt 2: Slave 8259A
   irq_init(0xFFF8);
-  trap_init();
+  env_init();
 
   //test_printk();
   __asm __volatile("sti");  // test interrupt gates and trap gates
