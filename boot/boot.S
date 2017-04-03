@@ -45,7 +45,7 @@ next:
   movw  %ax, %fs
   movw  %ax, %gs
   movw  %ax, %ss
-  movl  $start, %esp
+  movl  $0xf00000, %esp
   call  bootloader
 
 .p2align 2
