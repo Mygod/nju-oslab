@@ -38,6 +38,14 @@
 # virtual memory when the bootloader enters this code, we need the
 # bootloader to jump to the *physical* address of the entry point.
 .globl		_start
+# IMPORTANT: Answer to question in lab2 handouts
+#
+# Q: 如果你参考jos的代码，在entry.S中，有这样2行代码：
+# 请分别解释这2行代码的意义
+#
+# _start is used to set entry point to actual physical address instead of virtual address since we haven't set up paging
+# at that point. An alternative solution would be remove the upper digits manually in boot/main.c:54 (git blame this
+# change to learn more).
 _start = RELOC(entry)
 
 .globl entry
@@ -66,6 +74,14 @@ entry:
 	# (why is this okay?).  Jump up above KERNBASE before entering
 	# C code.
 	mov	$relocated, %eax
+	# IMPORTANT: Answer to question in lab2 handouts
+	#
+	# Q: 如果你参考jos的代码，在entry.S中，有这样2行代码：
+	# 请分别解释这2行代码的意义
+	#
+	# Using direct jumps will lead to using relative jumps, which isn't desirable since we need to jump up above
+	# KERNBASE. However it turned out that using direct jump didn't cause any problem since the program segment doesn't
+	# need to be written to.
 	jmp	*%eax
 relocated:
 

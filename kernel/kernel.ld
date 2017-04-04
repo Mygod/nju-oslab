@@ -4,7 +4,7 @@ OUTPUT_FORMAT(
     "elf32-i386"   /* Little endian */
 )
 OUTPUT_ARCH(i386)
-ENTRY(entry)
+ENTRY(_start)
 
 SECTIONS
 {

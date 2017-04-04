@@ -7,6 +7,15 @@
 #define MAX_MEM     0x8000000 // QEMU default: 128MB
 #define PMAP_SIZE   (MAX_MEM - PMAP_OFFSET)
 
+/*
+ * IMPORTANT: Answer to question in lab2 handouts
+ *
+ * Q：这样做为什么可以，会不会带来什么问题？
+ *
+ * Because it's perfectly doable. The problem is that every process will have access to kernel space. This could be
+ * utilized by malicious programs.
+ */
+
 extern pde_t entry_pgdir[NPDENTRIES];
 static uint32_t allocated;
 __attribute__((__aligned__(PGSIZE)))
