@@ -13,13 +13,17 @@ void sys_sleep() {
 }
 
 KeyboardListener keyboardListener;
-void sys_listenKeyboard(KeyboardListener handler) {
+KeyboardListener sys_listenKeyboard(KeyboardListener handler) {
+  KeyboardListener old = keyboardListener;
   keyboardListener = handler;
+  return old;
 }
 
 ClockListener clockListener;
-void sys_listenClock(ClockListener handler) {
+ClockListener sys_listenClock(ClockListener handler) {
+  ClockListener old = clockListener;
   clockListener = handler;
+  return old;
 }
 
 int32_t syscall_dispatch(struct Trapframe *tf) {
@@ -35,12 +39,8 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
     case SYS_sleep:
       sys_sleep();
       return E_SUCCESS;
-    case SYS_listenKeyboard:
-      sys_listenKeyboard((KeyboardListener) arg1);
-      return E_SUCCESS;
-    case SYS_listenClock:
-      sys_listenClock((ClockListener) arg1);
-      return E_SUCCESS;
+    case SYS_listenKeyboard: return (int32_t) sys_listenKeyboard((KeyboardListener) arg1);
+    case SYS_listenClock: return (int32_t) sys_listenClock((ClockListener) arg1);
     default: return E_SYSCALL_NOT_FOUND;
   }
 }

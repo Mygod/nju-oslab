@@ -86,24 +86,28 @@ KeyboardListener keyboardListener;
 void _keyboardListener(uint8_t code) {
   if (keyboardListener != NULL) keyboardListener(code);
 }
-void sys_listenKeyboard(KeyboardListener handler) {
+KeyboardListener sys_listenKeyboard(KeyboardListener handler) {
   static bool registered = false;
   if (!registered) {
-    assert(do_syscall1(SYS_listenKeyboard, (uint32_t) &_keyboardListener) == E_SUCCESS);
+    do_syscall1(SYS_listenKeyboard, (uint32_t) &_keyboardListener);
     registered = true;
   }
+  KeyboardListener old = keyboardListener;
   keyboardListener = handler;
+  return old;
 }
 
 ClockListener clockListener;
 void _clockListener() {
   if (clockListener != NULL) clockListener();
 }
-void sys_listenClock(ClockListener handler) {
+ClockListener sys_listenClock(ClockListener handler) {
   static bool registered = false;
   if (!registered) {
-    assert(do_syscall1(SYS_listenClock, (uint32_t) &_clockListener) == E_SUCCESS);
+    do_syscall1(SYS_listenClock, (uint32_t) &_clockListener);
     registered = true;
   }
+  ClockListener old = clockListener;
   clockListener = handler;
+  return old;
 }
