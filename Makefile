@@ -33,7 +33,7 @@ GDB_OPTIONS += -ex "symbol $(KERNEL)"
 #GDB_OPTIONS += -ex "b *0x7c00"
 #GDB_OPTIONS += -ex "b main"
 #GDB_OPTIONS += -ex "b trap"
-GDB_OPTIONS += -ex "b *0x100b08"
+GDB_OPTIONS += -ex "b *0x100a8f"
 GDB_OPTIONS += -ex "c"
 GDB_OPTIONS += -ex "layout split"
 

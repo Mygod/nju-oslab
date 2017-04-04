@@ -8,6 +8,7 @@ enum {
   SYS_sleep,
   SYS_listenKeyboard,
   SYS_listenClock,
+  SYS_drawPoint,
 };
 
 typedef void (*KeyboardListener)(uint8_t), (*ClockListener)();
@@ -19,5 +20,6 @@ void sys_sleep();
 // TODO: implement proper signal handling which requires long jumps :/
 KeyboardListener sys_listenKeyboard(KeyboardListener handler);
 ClockListener sys_listenClock(ClockListener handler);
+uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color);
 
 #endif

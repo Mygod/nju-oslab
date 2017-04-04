@@ -26,6 +26,12 @@ ClockListener sys_listenClock(ClockListener handler) {
   return old;
 }
 
+uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color) {
+  uint8_t *p = (uint8_t *) 0xA0000 + y * 320 + x, old = *p;
+  *p = color;
+  return old;
+}
+
 int32_t syscall_dispatch(struct Trapframe *tf) {
 #define arg1 tf->tf_regs.reg_edx
 #define arg2 tf->tf_regs.reg_ecx
@@ -41,6 +47,7 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
       return E_SUCCESS;
     case SYS_listenKeyboard: return (int32_t) sys_listenKeyboard((KeyboardListener) arg1);
     case SYS_listenClock: return (int32_t) sys_listenClock((ClockListener) arg1);
+    case SYS_drawPoint: return sys_drawPoint((uint16_t) arg1, (uint16_t) arg2, (uint8_t) arg3);
     default: return E_SYSCALL_NOT_FOUND;
   }
 }

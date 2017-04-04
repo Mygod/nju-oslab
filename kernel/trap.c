@@ -80,26 +80,23 @@ void trap(struct Trapframe *tf) {
   // of GCC rely on DF being clear
   __asm __volatile("cld" ::: "cc");
 
-  static int base = 1;
-  uint8_t code;
   switch (tf->tf_trapno) {
     case T_SYSCALL:
       tf->tf_regs.reg_eax = syscall_dispatch(tf);
       break;
-    case IRQ_OFFSET + IRQ_TIMER:
-      for (int i = 0; i < 320 * 200; ++i) *((uint8_t *) 0xA0000 + i) = (uint8_t) (base + i + i);
-      base += 2;
-      irq_eoi();
+    case IRQ_OFFSET + IRQ_TIMER: {
       extern ClockListener clockListener;
       if (clockListener != NULL) clockListener();
-      break;
-    case IRQ_OFFSET + IRQ_KBD:
-      code = inb(0x60);
-      base = (base & ~1) | (code >> 7);
       irq_eoi();
+      break;
+    }
+    case IRQ_OFFSET + IRQ_KBD: {
+      uint8_t code = inb(0x60);
       extern KeyboardListener keyboardListener;
       if (keyboardListener != NULL) keyboardListener(code);
+      irq_eoi();
       break;
+    }
     case IRQ_OFFSET + IRQ_IDE:
       // ignore, triggered when iret to user
       break;

@@ -111,3 +111,9 @@ ClockListener sys_listenClock(ClockListener handler) {
   clockListener = handler;
   return old;
 }
+
+uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color) {
+  int32_t result = do_syscall3(SYS_drawPoint, x, y, color);
+  assert(result >= E_SUCCESS);
+  return (uint8_t) result;
+}
