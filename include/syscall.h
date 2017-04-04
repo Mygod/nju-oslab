@@ -9,6 +9,7 @@ enum {
   SYS_listenKeyboard,
   SYS_listenClock,
   SYS_drawPoint,
+  SYS_crash,
 };
 
 typedef void (*KeyboardListener)(uint8_t), (*ClockListener)();
@@ -21,5 +22,6 @@ void sys_sleep();
 KeyboardListener sys_listenKeyboard(KeyboardListener handler);
 ClockListener sys_listenClock(ClockListener handler);
 uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color);
+void sys_crash() __attribute__((noreturn));
 
 #endif

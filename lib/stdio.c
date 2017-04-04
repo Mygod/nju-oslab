@@ -111,7 +111,7 @@ void _warn(const char* file, int line, const char* format, ...) {
   va_end(args);
   printk("\n");
 }
-__attribute__((noreturn)) void _panic(const char* file, int line, const char* format, ...) {
+void _panic(const char* file, int line, const char* format, ...) {
   __asm __volatile("cld");
   printk("Fatal (%s:%d): ", file, line);
   va_list args;
@@ -119,6 +119,5 @@ __attribute__((noreturn)) void _panic(const char* file, int line, const char* fo
   vprintk(format, args);
   va_end(args);
   printk("\n");
-  // TODO: sys_crash
-  for (;;) sys_sleep();
+  sys_crash();
 }

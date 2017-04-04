@@ -32,6 +32,10 @@ uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color) {
   return old;
 }
 
+__attribute__((noreturn)) void sys_crash() {
+  for (;;) __asm __volatile("cli; hlt");
+}
+
 int32_t syscall_dispatch(struct Trapframe *tf) {
 #define arg1 tf->tf_regs.reg_edx
 #define arg2 tf->tf_regs.reg_ecx
@@ -48,6 +52,7 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
     case SYS_listenKeyboard: return (int32_t) sys_listenKeyboard((KeyboardListener) arg1);
     case SYS_listenClock: return (int32_t) sys_listenClock((ClockListener) arg1);
     case SYS_drawPoint: return sys_drawPoint((uint16_t) arg1, (uint16_t) arg2, (uint8_t) arg3);
+    case SYS_crash: sys_crash();
     default: return E_SYSCALL_NOT_FOUND;
   }
 }

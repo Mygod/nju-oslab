@@ -117,3 +117,7 @@ uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color) {
   assert(result >= E_SUCCESS);
   return (uint8_t) result;
 }
+
+__attribute__((noreturn)) void sys_crash() {
+  for (;;) do_syscall0(SYS_crash);
+}
