@@ -52,33 +52,33 @@ char* utoa(unsigned value, char* result, int base) {
   return result;
 }
 
+static inline void _checkedPut(char *out, size_t *counter, size_t size, char c) {
+  if (*counter < size) out[*counter] = c;
+  ++*counter;
+}
 static size_t vsnprintf(char *out, size_t size, const char *format, va_list args) {
   char buffer[16];
   size_t counter = 0;
-#define PUT_AND_CHECK(c) do {               \
-    if (counter < size) out[counter] = (c); \
-    ++counter;                              \
-  } while (false)
-  for (const char *i = format; *i; ++i) if (*i != '%') PUT_AND_CHECK(*i); else switch (*++i) {
+  for (const char *i = format; *i; ++i) if (*i != '%') _checkedPut(out, &counter, size, *i); else switch (*++i) {
     case 'c':
-      PUT_AND_CHECK(va_arg(args, int));
+      _checkedPut(out, &counter, size, va_arg(args, int));
       break;
     case 'd':
       itoa(va_arg(args, int), buffer);
-      for (char *j = buffer; *j; ++j) PUT_AND_CHECK(*j);
+      for (char *j = buffer; *j; ++j) _checkedPut(out, &counter, size, *j);
       break;
     case 's':
-      for (char *j = va_arg(args, char *); *j; ++j) PUT_AND_CHECK(*j);
+      for (char *j = va_arg(args, char *); *j; ++j) _checkedPut(out, &counter, size, *j);
       break;
     case 'x':
       utoa(va_arg(args, unsigned), buffer, 16);
-      for (char *j = buffer; *j; ++j) PUT_AND_CHECK(*j);
+      for (char *j = buffer; *j; ++j) _checkedPut(out, &counter, size, *j);
       break;
     default:
-      PUT_AND_CHECK((uint8_t) *i);
+      _checkedPut(out, &counter, size, (uint8_t) *i);
       break;
   }
-  PUT_AND_CHECK('\0');
+  _checkedPut(out, &counter, size, '\0');
 #undef PUT_AND_CHECK
   return counter;
 }
