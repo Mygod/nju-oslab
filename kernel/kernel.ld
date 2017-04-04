@@ -4,11 +4,11 @@ OUTPUT_FORMAT(
     "elf32-i386"   /* Little endian */
 )
 OUTPUT_ARCH(i386)
-ENTRY(main)
+ENTRY(entry)
 
 SECTIONS
 {
-    . = 0x100000;
+    . = 0xF0100000;
 
     PROVIDE(start = .);
 

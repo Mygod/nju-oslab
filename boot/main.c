@@ -51,6 +51,6 @@ void bootloader() {
     readsect((void *) ph->paddr, 1 + ph->off / SECTSIZE, (uint8_t) sectors);
     memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
   }
-  ((void (*)()) elfheader->entry)();
+  ((void (*)()) (elfheader->entry & 0xFFFFFFF))();
   for (;;);
 }

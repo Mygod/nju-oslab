@@ -4,6 +4,7 @@
 #include "ide.h"
 #include "irq.h"
 #include "memlayout.h"
+#include "pmap.h"
 #include "string.h"
 #include "serial.h"
 
@@ -91,7 +92,6 @@ static inline void pit_init(int hz) {
 
 extern void env_init();
 
-// TODO: paging
 #define SECTCOUNT 1
 uintptr_t userprog_load(uint32_t offset) {
   uint8_t header[SECTSIZE * SECTCOUNT];
@@ -108,7 +108,7 @@ uintptr_t userprog_load(uint32_t offset) {
   return elfheader->entry;
 }
 
-int main() {
+void i386_init() {
   serial_init();
   pit_init(100);
   // Interrupt 0: Timer
@@ -118,8 +118,6 @@ int main() {
   env_init();
 
   struct PCB userprog;
-  pcb_init(&userprog,
-           0x8048000, // TODO: Use this after adding PROPER paging: USTACKTOP;
-           userprog_load(200 * SECTSIZE), FL_ALWAYS1 | FL_IF);
+  pcb_init(&userprog, 0x8048000, userprog_load(256 * SECTSIZE), FL_ALWAYS1 | FL_IF);
   pcb_exec(&userprog);
 }

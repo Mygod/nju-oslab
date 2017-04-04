@@ -1,8 +1,8 @@
 #include "error.h"
+#include "memlayout.h"
 #include "serial.h"
 #include "syscall.h"
 #include "trap.h"
-#include "types.h"
 
 void sys_printk(const char *out, size_t size) {
   for (size_t i = 0; i < size; ++i) serial_putchar((uint8_t) out[i]);
@@ -27,7 +27,7 @@ ClockListener sys_listenClock(ClockListener handler) {
 }
 
 uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color) {
-  uint8_t *p = (uint8_t *) 0xA0000 + y * 320 + x, old = *p;
+  uint8_t *p = (uint8_t *) KERNBASE + IOPHYSMEM + y * 320 + x, old = *p;
   *p = color;
   return old;
 }

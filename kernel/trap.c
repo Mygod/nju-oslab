@@ -1,10 +1,9 @@
 #include "assert.h"
 #include "irq.h"
 #include "memlayout.h"
-#include "string.h"
-#include "syscall.h"
-#include "trap.h"
 #include "pcb.h"
+#include "pmap.h"
+#include "syscall.h"
 
 struct Segdesc gdt[6] = {
     // 0x0 - unused (always faults -- for trapping NULL far pointers)
@@ -60,7 +59,7 @@ void env_init() {
   // init syscall
   SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_handlers[T_SYSCALL], 3);
 
-  pts.ts_esp0 = 0xf00000; // TODO: use this after implementing PROPER paging support: KSTACKTOP;
+  pts.ts_esp0 = 0xF0400000;
   pts.ts_ss0 = GD_KD;
 
   // Initialize the TSS slot of the gdt.
@@ -81,6 +80,13 @@ void trap(struct Trapframe *tf) {
   __asm __volatile("cld" ::: "cc");
 
   switch (tf->tf_trapno) {
+    case T_GPFLT: panic("General protection fault at 0x%x.", tf->tf_eip);
+    case T_PGFLT: {
+      uint32_t fault_va = rcr2();
+      // if (!(tf->tf_cs & 3)) panic("Page fault in kernel mode at 0x%x, va=0x%x", tf->tf_eip, fault_va);
+      pmap_alloc(fault_va, true);
+      break;
+    }
     case T_SYSCALL:
       tf->tf_regs.reg_eax = syscall_dispatch(tf);
       break;
@@ -100,9 +106,8 @@ void trap(struct Trapframe *tf) {
     case IRQ_OFFSET + IRQ_IDE:
       // ignore, triggered when iret to user
       break;
-    case T_GPFLT: panic("Kernel: General protection fault at 0x%x.", tf->tf_eip);
     default:
-      warn("Kernel: Unhandled interrupt %d occurred at 0x%x.", tf->tf_trapno, tf->tf_eip);
+      warn("Unhandled interrupt %d occurred at 0x%x.", tf->tf_trapno, tf->tf_eip);
       break;
   }
 }

@@ -22,7 +22,6 @@ CFLAGS += -ggdb3
 QEMU_OPTIONS := -serial stdio
 #QEMU_OPTIONS += -d int
 QEMU_OPTIONS += -monitor telnet:127.0.0.1:1111,server,nowait #telnet monitor
-QEMU_OPTIONS += -m 256M # TODO: Remove this after implementing proper paging support
 
 QEMU_DEBUG_OPTIONS := -S
 QEMU_DEBUG_OPTIONS += -s
@@ -31,9 +30,11 @@ GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
 GDB_OPTIONS += -ex "symbol $(KERNEL)"
 #GDB_OPTIONS += -ex "symbol $(USER)"
 #GDB_OPTIONS += -ex "b *0x7c00"
-#GDB_OPTIONS += -ex "b main"
+#GDB_OPTIONS += -ex "b entry"
 #GDB_OPTIONS += -ex "b trap"
-GDB_OPTIONS += -ex "b *0x100a8f"
+GDB_OPTIONS += -ex "b i386_init"
+#GDB_OPTIONS += -ex "b kernel/pmap.c:26"
+#GDB_OPTIONS += -ex "b main"
 GDB_OPTIONS += -ex "c"
 GDB_OPTIONS += -ex "layout split"
 
@@ -65,10 +66,10 @@ USER_C := $(shell find $(USER_DIR) -name "*.c")
 USER_O := $(USER_C:%.c=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(KERNEL) $(USER)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=1024          > /dev/null 2> /dev/null
+	@$(DD) if=/dev/zero of=$(IMAGE) count=512           > /dev/null 2> /dev/null
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
 	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null 2> /dev/null
-	@$(DD) if=$(USER) of=$(IMAGE) seek=200 conv=notrunc > /dev/null 2> /dev/null
+	@$(DD) if=$(USER) of=$(IMAGE) seek=256 conv=notrunc > /dev/null 2> /dev/null
 
 $(BOOT): $(BOOT_O)
 	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
@@ -87,7 +88,7 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
 $(KERNEL): $(KERNEL_LD)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
 	$(LD) -m elf_i386 -T $(KERNEL_LD) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	@./make-kernel $@ 101888
+	@./make-kernel $@ 130560
 
 $(USER): $(USER_O) $(LIB_O)
 	$(LD) -m elf_i386 -emain -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
