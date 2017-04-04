@@ -98,6 +98,7 @@
 
 // Eflags register
 #define FL_CF		0x00000001	// Carry Flag
+#define FL_ALWAYS1 0x2			// That weird flag that's always 1
 #define FL_PF		0x00000004	// Parity Flag
 #define FL_AF		0x00000010	// Auxiliary carry Flag
 #define FL_ZF		0x00000040	// Zero Flag

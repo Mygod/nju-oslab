@@ -1,8 +1,14 @@
+#include "assert.h"
+#include "elf.h"
+#include "error.h"
+#include "ide.h"
 #include "irq.h"
+#include "memlayout.h"
+#include "string.h"
 #include "serial.h"
-#include "tests.h"
 
-#define IRQ_OFFSET 0x20
+#include "kernel/pcb.h"
+
 #define IRQ_SLAVE 2
 
 static inline void irq_init(uint16_t mask) {
@@ -85,6 +91,23 @@ static inline void pit_init(int hz) {
 
 extern void env_init();
 
+// TODO: paging
+#define SECTCOUNT 1
+uintptr_t userprog_load(uint32_t offset) {
+  uint8_t header[SECTSIZE * SECTCOUNT];
+  assert(ide_read(header, offset, SECTSIZE * SECTCOUNT) == E_SUCCESS);
+  struct ELFHeader *elfheader = (struct ELFHeader *) header;
+  assert(elfheader->magic == 0x464C457FU);  // "\x7FELF" in little endian
+  assert(elfheader->phoff + elfheader->phnum * sizeof(struct ProgramHeader) <= SECTSIZE * SECTCOUNT);
+  struct ProgramHeader *ph = (struct ProgramHeader *) (header + elfheader->phoff);
+  for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) if (ph->type == 1) { // ELF_PROG_LOAD
+    assert(ph->paddr >= 0x1000000);         // don't overlap kernel
+    assert(ide_read((void *) ph->paddr, offset + ph->off, ph->filesz) == E_SUCCESS);
+    memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
+  }
+  return elfheader->entry;
+}
+
 int main() {
   serial_init();
   pit_init(100);
@@ -94,8 +117,15 @@ int main() {
   irq_init(0xFFF8);
   env_init();
 
-  //test_printk();
-  __asm __volatile("sti");  // test interrupt gates and trap gates
-  for (;;) __asm __volatile("hlt");
-  return 0;
+  struct PCB userprog;
+  struct Trapframe userprog_tf;
+  userprog.tf = &userprog_tf;
+  // TODO: setup vm
+  memset(&userprog_tf, 0, sizeof(userprog_tf));
+  userprog_tf.tf_ds = userprog_tf.tf_es = userprog_tf.tf_ss = GD_UD | 3;
+  userprog_tf.tf_esp = 0x8048000; // TODO: Use this after adding PROPER paging: USTACKTOP;
+  userprog_tf.tf_cs = GD_UT | 3;
+  userprog_tf.tf_eip = userprog_load(200 * SECTSIZE);
+  userprog_tf.tf_eflags = FL_ALWAYS1 | FL_IF;
+  pcb_exec(&userprog);
 }

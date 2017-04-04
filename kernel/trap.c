@@ -57,7 +57,7 @@ void env_init() {
   // init syscall
   SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_handlers[T_SYSCALL], 3);
 
-  pts.ts_esp0 = KSTACKTOP;
+  pts.ts_esp0 = 0xf00000; // TODO: use this after implementing PROPER paging support: KSTACKTOP;
   pts.ts_ss0 = GD_KD;
 
   // Initialize the TSS slot of the gdt.

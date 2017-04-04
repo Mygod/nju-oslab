@@ -22,6 +22,7 @@ CFLAGS += -ggdb3
 QEMU_OPTIONS := -serial stdio
 #QEMU_OPTIONS += -d int
 QEMU_OPTIONS += -monitor telnet:127.0.0.1:1111,server,nowait #telnet monitor
+QEMU_OPTIONS += -m 256M # TODO: Remove this after implementing proper paging support
 
 QEMU_DEBUG_OPTIONS := -S
 QEMU_DEBUG_OPTIONS += -s
@@ -29,9 +30,11 @@ QEMU_DEBUG_OPTIONS += -s
 GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
 GDB_OPTIONS += -ex "symbol $(KERNEL)"
 #GDB_OPTIONS += -ex "b *0x7c00"
-GDB_OPTIONS += -ex "b main"
-GDB_OPTIONS += -ex "b trap"
+#GDB_OPTIONS += -ex "b main"
+#GDB_OPTIONS += -ex "b trap"
+GDB_OPTIONS += -ex "b userprog_load"
 GDB_OPTIONS += -ex "c"
+GDB_OPTIONS += -ex "layout split"
 
 OBJ_DIR        := obj
 LIB_DIR        := lib
@@ -43,8 +46,6 @@ OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
 OBJ_USER_DIR   := $(OBJ_DIR)/$(USER_DIR)
 
-LD_SCRIPT := $(shell find $(KERNEL_DIR) -name "*.ld")
-
 LIB_C := $(wildcard $(LIB_DIR)/*.c)
 LIB_O := $(LIB_C:%.c=$(OBJ_DIR)/%.o)
 
@@ -53,6 +54,7 @@ BOOT_C := $(wildcard $(BOOT_DIR)/*.c)
 BOOT_O := $(BOOT_S:%.S=$(OBJ_DIR)/%.o)
 BOOT_O += $(BOOT_C:%.c=$(OBJ_DIR)/%.o)
 
+KERNEL_LD := $(shell find $(KERNEL_DIR) -name "*.ld")
 KERNEL_C := $(shell find $(KERNEL_DIR) -name "*.c")
 KERNEL_S := $(wildcard $(KERNEL_DIR)/*.S)
 KERNEL_O := $(KERNEL_C:%.c=$(OBJ_DIR)/%.o)
@@ -62,16 +64,16 @@ USER_C := $(shell find $(USER_DIR) -name "*.c")
 USER_O := $(USER_C:%.c=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(KERNEL) $(USER)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=10240         > /dev/null 2> /dev/null
+	@$(DD) if=/dev/zero of=$(IMAGE) count=1024          > /dev/null 2> /dev/null
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
 	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null 2> /dev/null
-	# TODO: Add USER
+	@$(DD) if=$(USER) of=$(IMAGE) seek=200 conv=notrunc > /dev/null 2> /dev/null
 
 $(BOOT): $(BOOT_O)
 	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
 	$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
 	@rm $@.out
-	./make-mbr $@
+	@./make-mbr $@
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.S
 	@mkdir -p $(OBJ_BOOT_DIR)
@@ -81,9 +83,10 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
 	@mkdir -p $(OBJ_BOOT_DIR)
 	$(CC) $(CFLAGS) -Os $< -o $@
 
-$(KERNEL): $(LD_SCRIPT)
+$(KERNEL): $(KERNEL_LD)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
-	$(LD) -m elf_i386 -T $(LD_SCRIPT) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	$(LD) -m elf_i386 -T $(KERNEL_LD) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+	@./make-kernel $@ 101888
 
 $(USER): $(USER_O) $(LIB_O)
 	$(LD) -m elf_i386 -emain -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)

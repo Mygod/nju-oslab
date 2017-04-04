@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+open(SIG, $ARGV[0]) || die "open $ARGV[0]: $!";
+
+$n = sysread(SIG, $buf, $ARGV[1]);
+
+if($n > $ARGV[1]){
+  print STDERR "ERROR:Kernel binary file too large:\
+      $n bytes (max $ARGV[1])\n";
+  exit 1;
+}
+
+print STDERR "Kernel binary file is $n bytes (max $ARGV[1])\n";
+
+$p = $ARGV[1] - $n;
+$buf .= "\0" x $p;
+open(SIG, ">$ARGV[0]") || die "open >$ARGV[0]: $!";
+print SIG $buf;
+close SIG;

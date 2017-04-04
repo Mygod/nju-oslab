@@ -302,8 +302,8 @@ TRAPHANDLER_NOEC(thdlr255, 255)
 
 .globl _alltraps
 _alltraps:
-//  pushl %ds
-//  pushl %es
+	pushl %ds
+	pushl %es
 	pushal
 
 	movw $GD_KD, %ax
@@ -315,8 +315,8 @@ _alltraps:
 
 	addl $4, %esp
 	popal
-//  pop %es
-//  pop %ds
+	pop %es
+	pop %ds
 	addl $8, %esp # trap num and errcode
 	iret
 

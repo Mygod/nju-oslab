@@ -1,6 +1,7 @@
-#include <string.h>
 #include "elf.h"
 #include "x86.h"
+
+#include "lib/string.c"
 
 #define SECTSIZE 512
 #define SECTCOUNT 8
@@ -15,23 +16,24 @@ waitdisk(void)
 void
 readsect(void *dst, uint32_t offset, uint8_t count)
 {
-  // wait for disk to be ready
-  waitdisk();
-
-  outb(0x1F2, count);
-  outb(0x1F3, (uint8_t) offset);    //address = offset | 0xe0000000
-  outb(0x1F4, (uint8_t) (offset >> 8));
-  outb(0x1F5, (uint8_t) (offset >> 16));
-  outb(0x1F6, (uint8_t) ((offset >> 24) | 0xE0));
-  outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
-
   while (count--) {
+    // wait for disk to be ready
+    waitdisk();
+
+    outb(0x1F2, 1);
+    outb(0x1F3, (uint8_t) offset);    //address = offset | 0xe0000000
+    outb(0x1F4, (uint8_t) (offset >> 8));
+    outb(0x1F5, (uint8_t) (offset >> 16));
+    outb(0x1F6, (uint8_t) ((offset >> 24) | 0xE0));
+    outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
+
     // wait for disk to be ready
     waitdisk();
 
     // read sectors
     insl(0x1F0, dst, SECTSIZE/4);
     dst += SECTSIZE;
+    ++offset;
   }
 }
 
