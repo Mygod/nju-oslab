@@ -90,6 +90,8 @@ void trap(struct Trapframe *tf) {
       for (int i = 0; i < 320 * 200; ++i) *((uint8_t *) 0xA0000 + i) = (uint8_t) (base + i + i);
       base += 2;
       irq_eoi();
+      extern ClockListener clockListener;
+      if (clockListener != NULL) clockListener();
       break;
     case IRQ_OFFSET + IRQ_KBD:
       code = inb(0x60);

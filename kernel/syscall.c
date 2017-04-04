@@ -17,6 +17,11 @@ void sys_listenKeyboard(KeyboardListener handler) {
   keyboardListener = handler;
 }
 
+ClockListener clockListener;
+void sys_listenClock(ClockListener handler) {
+  clockListener = handler;
+}
+
 int32_t syscall_dispatch(struct Trapframe *tf) {
 #define arg1 tf->tf_regs.reg_edx
 #define arg2 tf->tf_regs.reg_ecx
@@ -32,6 +37,9 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
       return E_SUCCESS;
     case SYS_listenKeyboard:
       sys_listenKeyboard((KeyboardListener) arg1);
+      return E_SUCCESS;
+    case SYS_listenClock:
+      sys_listenClock((ClockListener) arg1);
       return E_SUCCESS;
     default: return E_SYSCALL_NOT_FOUND;
   }

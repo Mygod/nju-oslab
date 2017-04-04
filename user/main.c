@@ -32,9 +32,13 @@ static inline void test_printk() {
 void onKeyboard(uint8_t code) {
   printk("Keyboard 0x%x pressed!\n", code);
 }
+void onClock() {
+  // placeholder
+}
 
 int main() {
   sys_listenKeyboard(onKeyboard);
+  sys_listenClock(onClock);
   sys_printk(testMessage, sizeof(testMessage) - 1);
   assert(!unusedInteger);
   test_printk();
