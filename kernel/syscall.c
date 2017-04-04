@@ -9,7 +9,7 @@ void sys_printk(const char *out, size_t size) {
 }
 
 void sys_sleep() {
-  __asm __volatile("hlt");
+  __asm __volatile("sti; hlt; cli");
 }
 
 int32_t syscall_dispatch(struct Trapframe *tf) {
