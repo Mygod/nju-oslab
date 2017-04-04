@@ -118,14 +118,8 @@ int main() {
   env_init();
 
   struct PCB userprog;
-  struct Trapframe userprog_tf;
-  userprog.tf = &userprog_tf;
-  // TODO: setup vm
-  memset(&userprog_tf, 0, sizeof(userprog_tf));
-  userprog_tf.tf_ds = userprog_tf.tf_es = userprog_tf.tf_ss = GD_UD | 3;
-  userprog_tf.tf_esp = 0x8048000; // TODO: Use this after adding PROPER paging: USTACKTOP;
-  userprog_tf.tf_cs = GD_UT | 3;
-  userprog_tf.tf_eip = userprog_load(200 * SECTSIZE);
-  userprog_tf.tf_eflags = FL_ALWAYS1 | FL_IF;
+  pcb_init(&userprog,
+           0x8048000, // TODO: Use this after adding PROPER paging: USTACKTOP;
+           userprog_load(200 * SECTSIZE), FL_ALWAYS1 | FL_IF);
   pcb_exec(&userprog);
 }

@@ -81,3 +81,16 @@ void sys_printk(const char *out, size_t size) {
 void sys_sleep() {
   assert(do_syscall0(SYS_sleep) == E_SUCCESS);
 }
+
+KeyboardListener  keyboardListener;
+void _keyboardListener(uint8_t code) {
+  if (keyboardListener != NULL) keyboardListener(code);
+}
+void sys_listenKeyboard(KeyboardListener handler) {
+  static bool registered = false;
+  if (!registered) {
+    assert(do_syscall1(SYS_listenKeyboard, (uint32_t) &_keyboardListener) == E_SUCCESS);
+    registered = true;
+  }
+  keyboardListener = handler;
+}

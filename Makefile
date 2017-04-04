@@ -29,10 +29,11 @@ QEMU_DEBUG_OPTIONS += -s
 
 GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
 GDB_OPTIONS += -ex "symbol $(KERNEL)"
+#GDB_OPTIONS += -ex "symbol $(USER)"
 #GDB_OPTIONS += -ex "b *0x7c00"
 #GDB_OPTIONS += -ex "b main"
 #GDB_OPTIONS += -ex "b trap"
-GDB_OPTIONS += -ex "b userprog_load"
+GDB_OPTIONS += -ex "b *0x100b08"
 GDB_OPTIONS += -ex "c"
 GDB_OPTIONS += -ex "layout split"
 

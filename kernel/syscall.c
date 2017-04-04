@@ -12,6 +12,11 @@ void sys_sleep() {
   __asm __volatile("sti; hlt; cli");
 }
 
+KeyboardListener keyboardListener;
+void sys_listenKeyboard(KeyboardListener handler) {
+  keyboardListener = handler;
+}
+
 int32_t syscall_dispatch(struct Trapframe *tf) {
 #define arg1 tf->tf_regs.reg_edx
 #define arg2 tf->tf_regs.reg_ecx
@@ -24,6 +29,9 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
       return E_SUCCESS;
     case SYS_sleep:
       sys_sleep();
+      return E_SUCCESS;
+    case SYS_listenKeyboard:
+      sys_listenKeyboard((KeyboardListener) arg1);
       return E_SUCCESS;
     default: return E_SYSCALL_NOT_FOUND;
   }

@@ -29,7 +29,12 @@ static inline void test_printk() {
   printk("Test end!!! Good luck!!!\n");
 }
 
+void onKeyboard(uint8_t code) {
+  printk("Keyboard 0x%x pressed!\n", code);
+}
+
 int main() {
+  sys_listenKeyboard(onKeyboard);
   sys_printk(testMessage, sizeof(testMessage) - 1);
   assert(!unusedInteger);
   test_printk();

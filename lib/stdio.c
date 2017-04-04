@@ -112,12 +112,13 @@ void _warn(const char* file, int line, const char* format, ...) {
   printk("\n");
 }
 __attribute__((noreturn)) void _panic(const char* file, int line, const char* format, ...) {
-  __asm __volatile("cli; cld");
+  __asm __volatile("cld");
   printk("Fatal (%s:%d): ", file, line);
   va_list args;
   va_start(args, format);
   vprintk(format, args);
   va_end(args);
   printk("\n");
+  // TODO: sys_crash
   for (;;) sys_sleep();
 }

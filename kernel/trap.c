@@ -1,8 +1,10 @@
 #include "assert.h"
 #include "irq.h"
 #include "memlayout.h"
-#include "stdio.h"
+#include "string.h"
+#include "syscall.h"
 #include "trap.h"
+#include "pcb.h"
 
 struct Segdesc gdt[6] = {
     // 0x0 - unused (always faults -- for trapping NULL far pointers)
@@ -91,9 +93,10 @@ void trap(struct Trapframe *tf) {
       break;
     case IRQ_OFFSET + IRQ_KBD:
       code = inb(0x60);
-      printk("Kernel: Keyboard 0x%x pressed!\n", code);
       base = (base & ~1) | (code >> 7);
       irq_eoi();
+      extern KeyboardListener keyboardListener;
+      if (keyboardListener != NULL) keyboardListener(code);
       break;
     case IRQ_OFFSET + IRQ_IDE:
       // ignore, triggered when iret to user
