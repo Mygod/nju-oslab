@@ -63,8 +63,10 @@ uint32_t random;
 } while (false)
 void onKeyboard(uint8_t code) {
   printk("Keyboard 0x%x pressed!\n", code);
-  for (uint16_t y = 0; y < 200; ++y) for (uint16_t x = 0; x < 320; ++x)
-    sys_drawPoint(x, y, (uint8_t) (random + y * 320 + x));
+  for (uint16_t y = 0; y < 200; ++y) for (uint16_t x = 0; x < 320; ++x) {
+    sys_drawPoint(x, y, (uint8_t) random);
+    NEXT_RANDOM;
+  }
 }
 void onClock() {
   uint32_t x0 = random % 320, y0 = (random / 320) % 200;
