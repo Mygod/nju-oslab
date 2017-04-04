@@ -4,10 +4,12 @@
 #include "types.h"
 
 enum {
-  SYS_printk = 0
+  SYS_printk = 0,
+  SYS_sleep
 };
 
 // The following methods are implemented differently in kernel (direct calls) and user space (syscalls)
 void sys_printk(const char *out, size_t size);
+void sys_sleep();
 
 #endif

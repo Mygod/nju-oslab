@@ -75,5 +75,9 @@ static inline int32_t do_syscall5(int syscallno, uint32_t a1, uint32_t a2, uint3
 
 
 void sys_printk(const char *out, size_t size) {
-  assert(do_syscall2(SYS_printk, (uint32_t) out, (uint32_t) size) == 0);
+  assert(do_syscall2(SYS_printk, (uint32_t) out, (uint32_t) size) == E_SUCCESS);
+}
+
+void sys_sleep() {
+  assert(do_syscall0(SYS_sleep) == E_SUCCESS);
 }

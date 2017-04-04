@@ -119,5 +119,5 @@ __attribute__((noreturn)) void _panic(const char* file, int line, const char* fo
   vprintk(format, args);
   va_end(args);
   printk("\n");
-  for (;;) __asm __volatile("hlt");
+  for (;;) sys_sleep();
 }

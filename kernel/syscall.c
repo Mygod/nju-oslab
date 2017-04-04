@@ -8,6 +8,10 @@ void sys_printk(const char *out, size_t size) {
   for (size_t i = 0; i < size; ++i) serial_putchar((uint8_t) out[i]);
 }
 
+void sys_sleep() {
+  __asm __volatile("hlt");
+}
+
 int32_t syscall_dispatch(struct Trapframe *tf) {
 #define arg1 tf->tf_regs.reg_edx
 #define arg2 tf->tf_regs.reg_ecx
@@ -17,6 +21,9 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
   switch (tf->tf_regs.reg_eax) {  // syscall number
     case SYS_printk:
       sys_printk((const char *) arg1, arg2);
+      return E_SUCCESS;
+    case SYS_sleep:
+      sys_sleep();
       return E_SUCCESS;
     default: return E_SYSCALL_NOT_FOUND;
   }

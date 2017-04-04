@@ -33,6 +33,5 @@ int main() {
   sys_printk(testMessage, sizeof(testMessage) - 1);
   assert(!unusedInteger);
   test_printk();
-  for (;;) __asm __volatile("hlt");
-  return 0;
+  for (;;) sys_sleep();
 }

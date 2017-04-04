@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "irq.h"
 #include "memlayout.h"
 #include "stdio.h"
@@ -93,6 +94,13 @@ void trap(struct Trapframe *tf) {
       printk("Kernel: Keyboard 0x%x pressed!\n", code);
       base = (base & ~1) | (code >> 7);
       irq_eoi();
+      break;
+    case IRQ_OFFSET + IRQ_IDE:
+      // ignore, triggered when iret to user
+      break;
+    case T_GPFLT: panic("Kernel: General protection fault at 0x%x.", tf->tf_eip);
+    default:
+      warn("Kernel: Unhandled interrupt %d occurred at 0x%x.", tf->tf_trapno, tf->tf_eip);
       break;
   }
 }
