@@ -54,9 +54,7 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
     case SYS_printk:
       sys_printk((const char *) arg1, arg2);
       return E_SUCCESS;
-    case SYS_sleep:
-      sys_sleep(arg1);
-      return E_SUCCESS;
+    case SYS_sleep: sys_sleep(arg1);  // sys_sleep doesn't return
     case SYS_listenKeyboard: return (int32_t) sys_listenKeyboard((KeyboardListener) arg1);
     case SYS_listenClock: return (int32_t) sys_listenClock((ClockListener) arg1);
     case SYS_drawPoint: return sys_drawPoint((uint16_t) arg1, (uint16_t) arg2, (uint8_t) arg3);
