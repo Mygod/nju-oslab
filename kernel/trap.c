@@ -75,7 +75,7 @@ void env_init() {
 }
 
 static bool halted;
-void sched() {
+__attribute__((noreturn)) void sched() {
   for (int i = 1; i <= PROCESS_POOL_SIZE; ++i) {
     int pid = (current_pid + i) % PROCESS_POOL_SIZE;
     if (pcb_pool[pid].used && pcb_pool[pid].wakeTime <= sys_time) pcb_exec(pid, &pcb_pool[pid]);
@@ -103,22 +103,31 @@ void trap(struct Trapframe *tf) {
   halted = false;
   // printk("[DEBUG] tf: 0x%x, pcb.tf: 0x%x\n", tf, &pcb_pool[current_pid].tf);
   switch (tf->tf_trapno) {
-    case T_GPFLT: panic("General protection fault at 0x%x.", tf->tf_eip);
-    case T_PGFLT: panic("Page fault at 0x%x, va=0x%x", tf->tf_eip, rcr2());
+    case T_ILLOP: panic("Illegal opcode at 0x%x, pid=%d: 0x%x", tf->tf_eip, current_pid, *(uint32_t *) tf->tf_eip);
+    case T_GPFLT: panic("General protection fault at 0x%x, pid=%d", tf->tf_eip, current_pid);
+    case T_PGFLT: panic("Page fault at 0x%x, va=0x%x, pid=%d", tf->tf_eip, rcr2(), current_pid);
     case T_SYSCALL:
       tf->tf_regs.reg_eax = syscall_dispatch(tf);
       break;
     case IRQ_OFFSET + IRQ_TIMER: {
       ++sys_time;
-      extern ClockListener clockListener;
-      if (!(sys_time % PROCESS_POOL_SIZE) && clockListener != NULL) clockListener(); // ~47.666 Hz
+      if (!(sys_time % PROCESS_POOL_SIZE)) {  // ~47.666 Hz
+        for (int i = 0; i < PROCESS_POOL_SIZE; ++i) if (pcb_pool[i].used && pcb_pool[i].clockListener) {
+          pmap_load(i);
+          pcb_pool[i].clockListener();
+        }
+      }
       irq_eoi();
       sched();  // current process has used up its time
     }
     case IRQ_OFFSET + IRQ_KBD: {
       uint8_t code = inb(0x60);
-      extern KeyboardListener keyboardListener;
-      if (keyboardListener != NULL) keyboardListener(code);
+      int now = current_pid;
+      for (int i = 0; i < PROCESS_POOL_SIZE; ++i) if (pcb_pool[i].used && pcb_pool[i].keyboardListener) {
+        if (now != i) pmap_load(i);
+        pcb_pool[now = i].keyboardListener(code);
+      }
+      if (!wasHalted && now != current_pid) pmap_load(current_pid);
       irq_eoi();
       break;
     }

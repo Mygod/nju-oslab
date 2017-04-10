@@ -78,10 +78,16 @@ void onClock() {
 
 int main() {
   assert(!random);
+  int pid = sys_getpid();
+  printk("Process #%d is spawning children. Eww.\n", pid);
+  if ((pid = sys_fork()) > 0) {
+    printk("Process #%d is a new born children. How disgusting. Terminating.\n", pid);
+    sys_exit(0);
+  }
+  // test_printk();
+
   sys_listenKeyboard(onKeyboard);
   sys_listenClock(onClock);
-  printk("Current pid: %d\n", sys_getpid());
-  // test_printk();
   for (;;) {
     sys_sleep(0x7fffffff);
     warn("sys_sleep(forever) returned. You really have run this program for too long.");

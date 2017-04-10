@@ -27,15 +27,16 @@ QEMU_DEBUG_OPTIONS := -S
 QEMU_DEBUG_OPTIONS += -s
 
 GDB_OPTIONS := -ex "target remote 127.0.0.1:1234"
-GDB_OPTIONS += -ex "symbol $(KERNEL)"
-#GDB_OPTIONS += -ex "symbol $(USER)"
+#GDB_OPTIONS += -ex "symbol $(KERNEL)"
+GDB_OPTIONS += -ex "symbol $(USER)"
 #GDB_OPTIONS += -ex "b *0x7c00"
 #GDB_OPTIONS += -ex "b entry"
 #GDB_OPTIONS += -ex "b trap"
 #GDB_OPTIONS += -ex "b i386_init"
-#GDB_OPTIONS += -ex "b kernel/trap.c:84"
-GDB_OPTIONS += -ex "b sys_drawPoint"
+GDB_OPTIONS += -ex "b sys_listenKeyboard"
 GDB_OPTIONS += -ex "b _panic"
+#GDB_OPTIONS += -ex "c"
+#GDB_OPTIONS += -ex "b kernel/trap.c:115"
 GDB_OPTIONS += -ex "c"
 GDB_OPTIONS += -ex "layout split"
 

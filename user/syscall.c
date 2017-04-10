@@ -74,6 +74,11 @@ static inline int32_t do_syscall5(int syscallno, uint32_t a1, uint32_t a2, uint3
 }
 
 
+__attribute__((noreturn)) void sys_exit(int code) {
+  do_syscall1(SYS_exit, (uint32_t) code);
+  panic("SYS_exit returned");
+}
+
 void sys_printk(const char *out, size_t size) {
   assert(do_syscall2(SYS_printk, (uint32_t) out, (uint32_t) size) == E_SUCCESS);
 }
@@ -82,34 +87,12 @@ void sys_sleep(int ticks) {
   do_syscall1(SYS_sleep, (uint32_t) ticks); // this call won't return success
 }
 
-KeyboardListener keyboardListener;
-void _keyboardListener(uint8_t code) {
-  if (keyboardListener != NULL) keyboardListener(code);
-}
 KeyboardListener sys_listenKeyboard(KeyboardListener handler) {
-  static bool registered = false;
-  if (!registered) {
-    do_syscall1(SYS_listenKeyboard, (uint32_t) &_keyboardListener);
-    registered = true;
-  }
-  KeyboardListener old = keyboardListener;
-  keyboardListener = handler;
-  return old;
+  return (KeyboardListener) do_syscall1(SYS_listenKeyboard, (uint32_t) handler);
 }
 
-ClockListener clockListener;
-void _clockListener() {
-  if (clockListener != NULL) clockListener();
-}
 ClockListener sys_listenClock(ClockListener handler) {
-  static bool registered = false;
-  if (!registered) {
-    do_syscall1(SYS_listenClock, (uint32_t) &_clockListener);
-    registered = true;
-  }
-  ClockListener old = clockListener;
-  clockListener = handler;
-  return old;
+  return (ClockListener) do_syscall1(SYS_listenClock, (uint32_t) handler);
 }
 
 uint8_t sys_drawPoint(uint16_t x, uint16_t y, uint8_t color) {
@@ -124,4 +107,8 @@ __attribute__((noreturn)) void sys_crash() {
 
 int sys_getpid() {
   return do_syscall0(SYS_getpid);
+}
+
+int sys_fork() {
+  return do_syscall0(SYS_fork);
 }

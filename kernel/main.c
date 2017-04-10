@@ -100,7 +100,7 @@ uintptr_t userprog_load(int pid, uint32_t offset) {
   assert(elfheader->magic == 0x464C457FU);  // "\x7FELF" in little endian
   assert(elfheader->phoff + elfheader->phnum * sizeof(struct ProgramHeader) <= SECTSIZE * SECTCOUNT);
   struct ProgramHeader *ph = (struct ProgramHeader *) (header + elfheader->phoff);
-  lcr3((uint32_t) user_pgdir[pid] - KERNBASE);
+  pmap_load(pid);
   for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) if (ph->type == 1) { // ELF_PROG_LOAD
     assert(ph->paddr >= 0x8000000 && ph->paddr + ph->memsz <= 0x8400000); // our static allocation have to work!
     assert(ide_read((void *) ph->paddr, offset + ph->off, ph->filesz) == E_SUCCESS);

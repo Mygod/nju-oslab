@@ -35,3 +35,9 @@ void pmap_init() {
     (*user_pgdir[i])[KERNBASE >> PDXSHIFT] = entry_pgdir[KERNBASE >> PDXSHIFT];
   }
 }
+
+void pmap_copy(int dest, int src) {
+  (*user_pgdir[src])[0x40] = (pde_t) (((uintptr_t) &user_pgtable[dest] - KERNBASE) | PTE_P | PTE_W | PTE_U);
+  memcpy((void *) 0x10000000, (const void *) 0x8000000, PTSIZE);
+  (*user_pgdir[src])[0x40] = (pde_t) 0; // clean up
+}

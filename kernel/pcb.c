@@ -1,6 +1,5 @@
 #include "assert.h"
 #include "memlayout.h"
-#include "string.h"
 #include "x86.h"
 #include "kernel/pcb.h"
 #include "kernel/pmap.h"
@@ -12,6 +11,8 @@ uint64_t sys_time;
 void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags) {
   pcb->used = true;
   pcb->wakeTime = 0;
+  pcb->clockListener = NULL;
+  pcb->keyboardListener = NULL;
   memset(&pcb->tf, 0, sizeof(pcb->tf));
   pcb->tf.tf_ds = pcb->tf.tf_es = pcb->tf.tf_ss = GD_UD | 3;
   pcb->tf.tf_esp = esp;
@@ -21,7 +22,7 @@ void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags) {
 }
 
 void pcb_exec(int pid, struct PCB *pcb) {
-  lcr3((uint32_t) user_pgdir[current_pid = pid] - KERNBASE);
+  pmap_load(current_pid = pid);
   extern struct Taskstate pts;
   pts.ts_esp0 = (uintptr_t) pcb + sizeof(struct PCB);
   __asm __volatile("movl %0,%%esp\n"
