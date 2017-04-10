@@ -114,14 +114,14 @@ DEPS := $(shell find -name "*.d")
 .PHONY: qemu debug gdb clean
 
 qemu: $(IMAGE)
-	$(QEMU) $(QEMU_OPTIONS)
+	@$(QEMU) $(QEMU_OPTIONS)
 
 # Faster, but not suitable for debugging
 qemu-kvm: $(IMAGE)
-	$(QEMU) $(QEMU_OPTIONS) --enable-kvm
+	@$(QEMU) $(QEMU_OPTIONS) --enable-kvm
 
 debug: $(IMAGE)
-	$(QEMU) $(QEMU_DEBUG_OPTIONS) $(QEMU_OPTIONS)
+	@$(QEMU) $(QEMU_DEBUG_OPTIONS) $(QEMU_OPTIONS)
 
 gdb:
 	$(GDB) $(GDB_OPTIONS)
