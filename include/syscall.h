@@ -10,7 +10,7 @@ enum {
   SYS_listenClock,
   SYS_drawPoint,
   SYS_crash,
-  SYS_getpid
+  SYS_getpid,
 };
 
 typedef void (*KeyboardListener)(uint8_t), (*ClockListener)();
