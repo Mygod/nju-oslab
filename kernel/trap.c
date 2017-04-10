@@ -81,12 +81,7 @@ void trap(struct Trapframe *tf) {
 
   switch (tf->tf_trapno) {
     case T_GPFLT: panic("General protection fault at 0x%x.", tf->tf_eip);
-    case T_PGFLT: {
-      uint32_t fault_va = rcr2();
-      // if (!(tf->tf_cs & 3)) panic("Page fault in kernel mode at 0x%x, va=0x%x", tf->tf_eip, fault_va);
-      pmap_alloc(fault_va, true);
-      break;
-    }
+    case T_PGFLT: panic("Page fault at 0x%x, va=0x%x", tf->tf_eip, rcr2());
     case T_SYSCALL:
       tf->tf_regs.reg_eax = syscall_dispatch(tf);
       break;

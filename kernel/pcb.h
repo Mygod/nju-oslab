@@ -3,13 +3,19 @@
 
 #include "trap.h"
 
-#define KSTACK_SIZE 4096
+#define PROCESS_POOL_SIZE 28
+
 struct PCB {
+  bool used;
   struct Trapframe tf;
-  uint8_t kstack[KSTACK_SIZE];
 };
 
+extern struct PCB pcb_pool[PROCESS_POOL_SIZE];
+
 void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags);
-void pcb_exec(struct PCB *pcb);
+void pcb_exec(int pid, struct PCB *pcb);
+static inline void pcb_free(struct PCB *pcb) {
+  pcb->used = false;
+}
 
 #endif //OSLAB_PCB_H

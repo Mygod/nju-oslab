@@ -93,15 +93,16 @@ static inline void pit_init(int hz) {
 extern void env_init();
 
 #define SECTCOUNT 1
-uintptr_t userprog_load(uint32_t offset) {
+uintptr_t userprog_load(int pid, uint32_t offset) {
   uint8_t header[SECTSIZE * SECTCOUNT];
   assert(ide_read(header, offset, SECTSIZE * SECTCOUNT) == E_SUCCESS);
   struct ELFHeader *elfheader = (struct ELFHeader *) header;
   assert(elfheader->magic == 0x464C457FU);  // "\x7FELF" in little endian
   assert(elfheader->phoff + elfheader->phnum * sizeof(struct ProgramHeader) <= SECTSIZE * SECTCOUNT);
   struct ProgramHeader *ph = (struct ProgramHeader *) (header + elfheader->phoff);
+  lcr3((uint32_t) user_pgdir[pid] - KERNBASE);
   for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) if (ph->type == 1) { // ELF_PROG_LOAD
-    assert(ph->paddr >= 0x1000000);         // don't overlap kernel
+    assert(ph->paddr >= 0x8000000 && ph->paddr + ph->memsz <= 0x8400000); // our static allocation have to work!
     assert(ide_read((void *) ph->paddr, offset + ph->off, ph->filesz) == E_SUCCESS);
     memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
   }
@@ -109,6 +110,7 @@ uintptr_t userprog_load(uint32_t offset) {
 }
 
 void i386_init() {
+  pmap_init();
   serial_init();
   pit_init(100);
   // Interrupt 0: Timer
@@ -117,7 +119,6 @@ void i386_init() {
   irq_init(0xFFF8);
   env_init();
 
-  struct PCB userprog;
-  pcb_init(&userprog, 0x8048000, userprog_load(256 * SECTSIZE), FL_ALWAYS1 | FL_IF);
-  pcb_exec(&userprog);
+  pcb_init(&pcb_pool[0], 0x8048000, userprog_load(0, 256 * SECTSIZE), FL_ALWAYS1 | FL_IF);
+  pcb_exec(0, &pcb_pool[0]);
 }
