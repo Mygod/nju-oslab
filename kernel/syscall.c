@@ -2,7 +2,6 @@
 #include "error.h"
 #include "memlayout.h"
 #include "serial.h"
-#include "string.h"
 #include "syscall.h"
 #include "trap.h"
 #include "kernel/pcb.h"
@@ -12,7 +11,7 @@ extern void sched() __attribute__((noreturn));
 
 __attribute__((noreturn)) void sys_exit(int code) {
   printk("[Kernel] Process #%d exited with code %d.\n", current_pid + 1, code);
-  pcb_pool[current_pid].used = false;
+  pcb_free(&pcb_pool[current_pid]);
   sched();
 }
 
