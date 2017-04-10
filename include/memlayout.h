@@ -93,7 +93,7 @@
 #define EXTPHYSMEM	0x100000
 
 // Kernel stack.
-#define KSTACKTOP	KERNBASE
+#define KSTACKTOP	KERNBASE + PTSIZE
 #define KSTKSIZE	(8*PGSIZE)   		// size of a kernel stack
 #define KSTKGAP		(8*PGSIZE)   		// size of a kernel stack guard
 

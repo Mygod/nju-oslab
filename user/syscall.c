@@ -78,8 +78,8 @@ void sys_printk(const char *out, size_t size) {
   assert(do_syscall2(SYS_printk, (uint32_t) out, (uint32_t) size) == E_SUCCESS);
 }
 
-void sys_sleep() {
-  assert(do_syscall0(SYS_sleep) == E_SUCCESS);
+void sys_sleep(int ticks) {
+  do_syscall1(SYS_sleep, (uint32_t) ticks); // this call won't return success
 }
 
 KeyboardListener keyboardListener;

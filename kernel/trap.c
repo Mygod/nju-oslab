@@ -1,4 +1,5 @@
 #include "assert.h"
+#include "error.h"
 #include "irq.h"
 #include "memlayout.h"
 #include "pcb.h"
@@ -59,7 +60,7 @@ void env_init() {
   // init syscall
   SETGATE(idt[T_SYSCALL], 0, GD_KT, trap_handlers[T_SYSCALL], 3);
 
-  pts.ts_esp0 = 0xF0400000;
+  pts.ts_esp0 = KSTACKTOP;
   pts.ts_ss0 = GD_KD;
 
   // Initialize the TSS slot of the gdt.
@@ -73,12 +74,34 @@ void env_init() {
   lidt(&idt_pd);
 }
 
+static bool halted;
+void sched() {
+  for (int i = 1; i <= PROCESS_POOL_SIZE; ++i) {
+    int pid = (current_pid + i) % PROCESS_POOL_SIZE;
+    if (pcb_pool[pid].used && pcb_pool[pid].wakeTime <= sys_time) pcb_exec(pid, &pcb_pool[pid]);
+  }
+  // Nothing else to schedule, wait for something to happen
+  // We're now within kernel space so we need to move our pointer
+  halted = true;
+  __asm __volatile(
+    "movl %0, %%ebp\n"
+    "movl %0, %%esp\n"
+    "sti\n"
+    "hlt\n"
+    "cli"
+    : : "i" (KSTACKTOP));
+  panic("hlt returned");
+}
+
 extern uint32_t syscall_dispatch(struct Trapframe *tf);
 void trap(struct Trapframe *tf) {
   // The environment may have set DF and some versions
   // of GCC rely on DF being clear
   __asm __volatile("cld" ::: "cc");
 
+  bool wasHalted = halted;
+  halted = false;
+  // printk("[DEBUG] tf: 0x%x, pcb.tf: 0x%x\n", tf, &pcb_pool[current_pid].tf);
   switch (tf->tf_trapno) {
     case T_GPFLT: panic("General protection fault at 0x%x.", tf->tf_eip);
     case T_PGFLT: panic("Page fault at 0x%x, va=0x%x", tf->tf_eip, rcr2());
@@ -86,12 +109,11 @@ void trap(struct Trapframe *tf) {
       tf->tf_regs.reg_eax = syscall_dispatch(tf);
       break;
     case IRQ_OFFSET + IRQ_TIMER: {
-      static int64_t timer;
-      ++timer;
+      ++sys_time;
       extern ClockListener clockListener;
-      if (!(timer % PROCESS_POOL_SIZE) && clockListener != NULL) clockListener(); // ~47.666 Hz
+      if (!(sys_time % PROCESS_POOL_SIZE) && clockListener != NULL) clockListener(); // ~47.666 Hz
       irq_eoi();
-      break;
+      sched();  // current process has used up its time
     }
     case IRQ_OFFSET + IRQ_KBD: {
       uint8_t code = inb(0x60);
@@ -107,4 +129,5 @@ void trap(struct Trapframe *tf) {
       warn("Unhandled interrupt %d occurred at 0x%x.", tf->tf_trapno, tf->tf_eip);
       break;
   }
+  if (wasHalted) sched();
 }

@@ -82,5 +82,8 @@ int main() {
   sys_listenClock(onClock);
   printk("Current pid: %d\n", sys_getpid());
   // test_printk();
-  for (;;) sys_sleep();
+  for (;;) {
+    sys_sleep(0x7fffffff);
+    warn("sys_sleep(forever) returned. You really have run this program for too long.");
+  }
 }

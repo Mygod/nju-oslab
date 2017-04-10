@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "error.h"
 #include "memlayout.h"
 #include "pcb.h"
@@ -9,8 +10,10 @@ void sys_printk(const char *out, size_t size) {
   for (size_t i = 0; i < size; ++i) serial_putchar((uint8_t) out[i]);
 }
 
-void sys_sleep() {
-  __asm __volatile("sti; hlt; cli");
+void sys_sleep(int ticks) {
+  pcb_pool[current_pid].wakeTime = sys_time + ticks;
+  extern void sched();
+  sched();
 }
 
 KeyboardListener keyboardListener;
@@ -52,7 +55,7 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
       sys_printk((const char *) arg1, arg2);
       return E_SUCCESS;
     case SYS_sleep:
-      sys_sleep();
+      sys_sleep(arg1);
       return E_SUCCESS;
     case SYS_listenKeyboard: return (int32_t) sys_listenKeyboard((KeyboardListener) arg1);
     case SYS_listenClock: return (int32_t) sys_listenClock((ClockListener) arg1);

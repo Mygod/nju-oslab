@@ -7,9 +7,11 @@
 
 struct PCB pcb_pool[PROCESS_POOL_SIZE];
 int current_pid;
+uint64_t sys_time;
 
 void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags) {
   pcb->used = true;
+  pcb->wakeTime = 0;
   memset(&pcb->tf, 0, sizeof(pcb->tf));
   pcb->tf.tf_ds = pcb->tf.tf_es = pcb->tf.tf_ss = GD_UD | 3;
   pcb->tf.tf_esp = esp;
@@ -19,7 +21,9 @@ void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags) {
 }
 
 void pcb_exec(int pid, struct PCB *pcb) {
-  lcr3((uint32_t) user_pgdir[pid] - KERNBASE);
+  lcr3((uint32_t) user_pgdir[current_pid = pid] - KERNBASE);
+  extern struct Taskstate pts;
+  pts.ts_esp0 = (uintptr_t) pcb + sizeof(struct PCB);
   __asm __volatile("movl %0,%%esp\n"
       "\tpopal\n"
       "\tpopl %%es\n"
