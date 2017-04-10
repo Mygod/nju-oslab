@@ -124,6 +124,7 @@ void trap(struct Trapframe *tf) {
     }
     case IRQ_OFFSET + IRQ_IDE:
       // ignore, triggered when iret to user
+      irq_eoi();
       break;
     default:
       warn("Unhandled interrupt %d occurred at 0x%x.", tf->tf_trapno, tf->tf_eip);
