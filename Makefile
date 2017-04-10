@@ -22,6 +22,7 @@ CFLAGS += -ggdb3
 QEMU_OPTIONS := -serial stdio
 #QEMU_OPTIONS += -d int
 QEMU_OPTIONS += -monitor telnet:127.0.0.1:1111,server,nowait #telnet monitor
+QEMU_OPTIONS += -drive file=$(IMAGE),format=raw
 
 QEMU_DEBUG_OPTIONS := -S
 QEMU_DEBUG_OPTIONS += -s
@@ -113,14 +114,14 @@ DEPS := $(shell find -name "*.d")
 .PHONY: qemu debug gdb clean
 
 qemu: $(IMAGE)
-	$(QEMU) $(QEMU_OPTIONS) $(IMAGE)
+	$(QEMU) $(QEMU_OPTIONS)
 
 # Faster, but not suitable for debugging
 qemu-kvm: $(IMAGE)
-	$(QEMU) $(QEMU_OPTIONS) --enable-kvm $(IMAGE)
+	$(QEMU) $(QEMU_OPTIONS) --enable-kvm
 
 debug: $(IMAGE)
-	$(QEMU) $(QEMU_DEBUG_OPTIONS) $(QEMU_OPTIONS) $(IMAGE)
+	$(QEMU) $(QEMU_DEBUG_OPTIONS) $(QEMU_OPTIONS)
 
 gdb:
 	$(GDB) $(GDB_OPTIONS)
