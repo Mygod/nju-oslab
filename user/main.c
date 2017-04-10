@@ -80,6 +80,7 @@ int main() {
   assert(!random);
   sys_listenKeyboard(onKeyboard);
   sys_listenClock(onClock);
+  printk("Current pid: %d\n", sys_getpid());
   // test_printk();
   for (;;) sys_sleep();
 }

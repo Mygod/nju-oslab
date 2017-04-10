@@ -6,6 +6,7 @@
 #include "kernel/pmap.h"
 
 struct PCB pcb_pool[PROCESS_POOL_SIZE];
+int current_pid;
 
 void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags) {
   pcb->used = true;

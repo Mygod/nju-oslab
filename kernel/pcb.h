@@ -11,6 +11,7 @@ struct PCB {
 };
 
 extern struct PCB pcb_pool[PROCESS_POOL_SIZE];
+extern int current_pid;
 
 void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags);
 void pcb_exec(int pid, struct PCB *pcb);

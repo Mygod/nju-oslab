@@ -1,5 +1,6 @@
 #include "error.h"
 #include "memlayout.h"
+#include "pcb.h"
 #include "serial.h"
 #include "syscall.h"
 #include "trap.h"
@@ -36,6 +37,10 @@ __attribute__((noreturn)) void sys_crash() {
   for (;;) __asm __volatile("cli; hlt");
 }
 
+int sys_getpid() {
+  return current_pid;
+}
+
 int32_t syscall_dispatch(struct Trapframe *tf) {
 #define arg1 tf->tf_regs.reg_edx
 #define arg2 tf->tf_regs.reg_ecx
@@ -53,6 +58,7 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
     case SYS_listenClock: return (int32_t) sys_listenClock((ClockListener) arg1);
     case SYS_drawPoint: return sys_drawPoint((uint16_t) arg1, (uint16_t) arg2, (uint8_t) arg3);
     case SYS_crash: sys_crash();
+    case SYS_getpid: return sys_getpid();
     default: return E_SYSCALL_NOT_FOUND;
   }
 }
