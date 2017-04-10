@@ -87,10 +87,11 @@ __attribute__((noreturn)) void sched() {
     "movl %0, %%ebp\n"
     "movl %0, %%esp\n"
     "sti\n"
+    "1:\n"
     "hlt\n"
-    "cli"
+    "jmp 1b\n"
     : : "i" (KSTACKTOP));
-  panic("hlt returned");
+  panic("shut up compiler you don't know what you're doing");
 }
 
 extern uint32_t syscall_dispatch(struct Trapframe *tf);
