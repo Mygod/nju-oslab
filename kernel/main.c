@@ -75,7 +75,7 @@ union CmdByte {
   uint8_t val;
 };
 
-static inline void pit_init(int hz) {
+static inline void pit_init() {
   union CmdByte mode = {
       .present_mode = 0,  // 16-bit binary
       .operate_mode = 2,  // rate generator, for more accuracy
@@ -83,7 +83,7 @@ static inline void pit_init(int hz) {
       .channel      = 0,  // use channel 0
   };
 
-  int counter = PIT_FREQUENCE / hz;
+  int counter = (int) (PIT_FREQUENCE * .00075);        // 0.75ms is the default frequency for Linux scheduler
 
   outb(PORT_CMD, mode.val);
   outb(PORT_CH_0, (uint8_t) (counter & 0xFF));         // access low byte
@@ -112,7 +112,7 @@ uintptr_t userprog_load(int pid, uint32_t offset) {
 void i386_init() {
   pmap_init();
   serial_init();
-  pit_init(100);
+  pit_init();
   // Interrupt 0: Timer
   // Interrupt 1: Keyboard
   // Interrupt 2: Slave 8259A

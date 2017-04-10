@@ -86,8 +86,10 @@ void trap(struct Trapframe *tf) {
       tf->tf_regs.reg_eax = syscall_dispatch(tf);
       break;
     case IRQ_OFFSET + IRQ_TIMER: {
+      static int64_t timer;
+      ++timer;
       extern ClockListener clockListener;
-      if (clockListener != NULL) clockListener();
+      if (!(timer % PROCESS_POOL_SIZE) && clockListener != NULL) clockListener(); // ~47.666 Hz
       irq_eoi();
       break;
     }
