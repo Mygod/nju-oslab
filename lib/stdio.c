@@ -1,7 +1,7 @@
 #include <stdarg.h>
 
 #include "syscall.h"
-#include "types.h"
+#include "stdio.h"
 
 /**
  * C++ version 0.4 char* style "itoa":
@@ -78,17 +78,24 @@ static size_t vsnprintf(char *out, size_t size, const char *format, va_list args
       _checkedPut(out, &counter, size, (uint8_t) *i);
       break;
   }
-  _checkedPut(out, &counter, size, '\0');
-#undef PUT_AND_CHECK
+  if (counter < size) out[counter] = '\0';
   return counter;
+}
+
+size_t vsprintf(char *out, size_t size, const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  size_t result = vsnprintf(out, size, format, args);
+  va_end(args);
+  return result;
 }
 
 void vprintk(const char *format, va_list args) {
   va_list copy;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
-  va_copy(copy, args);                            // make a copy before reading on
-  size_t size = vsnprintf(NULL, 0, format, copy); // use the copy to calculate size
+  va_copy(copy, args);                                // make a copy before reading on
+  size_t size = vsnprintf(NULL, 0, format, copy) + 1; // use the copy to calculate size
   va_end(copy);
 #pragma clang diagnostic pop
   char out[size];

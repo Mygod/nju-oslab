@@ -78,6 +78,11 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
     case SYS_crash: sys_crash();
     case SYS_getpid: return sys_getpid();
     case SYS_fork: return sys_fork();
+    case SYS_sem_open: return sys_sem_open(arg1);
+    case SYS_sem_close: return sys_sem_close(arg1);
+    case SYS_sem_wait: return sys_sem_wait(arg1);
+    case SYS_sem_post: return sys_sem_post(arg1);
+    case SYS_mmap: return sys_mmap((void *) arg1, arg2);
     default: return E_SYSCALL_NOT_FOUND;
   }
 }

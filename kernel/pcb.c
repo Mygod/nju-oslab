@@ -10,6 +10,7 @@ uint64_t sys_time;
 
 void pcb_init(struct PCB *pcb, uintptr_t esp, uintptr_t eip, uint32_t eflags) {
   pcb->used = true;
+  pcb->waitSem = -1;
   pcb->wakeTime = 0;
   pcb->clockListener = NULL;
   pcb->keyboardListener = NULL;

@@ -1,29 +1,58 @@
 #include "assert.h"
+#include "mmu.h"
+#include "string.h"
 #include "syscall.h"
 
-static inline void test_printk() {
-  printk("Printk test begin...\n");
-  printk("the answer should be:\n");
-  printk("#######################################################\n");
-  printk("Hello, welcome to OSlab! I'm the body of the game. ");
-  printk("Bootblock loads me to the memory position of 0x100000, and Makefile also tells me that I'm at the location of 0x100000. ");
-  printk("~!@#$^&*()_+`1234567890-=...... ");
-  printk("Now I will test your printk: ");
-  printk("1 + 1 = 2, 123 * 456 = 56088\n0, -1, -2147483648, -1412505855, -32768, 102030\n0, ffffffff, 80000000, abcdef01, ffff8000, 18e8e\n");
-  printk("#######################################################\n");
-  printk("your answer:\n");
-  printk("=======================================================\n");
-  printk("%s %s%scome %co%s", "Hello,", "", "wel", 't', " ");
-  printk("%c%c%c%c%c! ", 'O', 'S', 'l', 'a', 'b');
-  printk("I'm the %s of %s. %s 0x%x, %s 0x%x. ", "body", "the game", "Bootblock loads me to the memory position of",
-         0x100000, "and Makefile also tells me that I'm at the location of", 0x100000);
-  printk("~!@#$^&*()_+`1234567890-=...... ");
-  printk("Now I will test your printk: ");
-  printk("%d + %d = %d, %d * %d = %d\n", 1, 1, 1 + 1, 123, 456, 123 * 456);
-  printk("%d, %d, %d, %d, %d, %d\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
-  printk("%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
-  printk("=======================================================\n");
-  printk("Test end!!! Good luck!!!\n");
+static size_t test_printk(char *out, size_t size) {
+  size_t count = 0;
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "Printk test begin...\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "the answer should be:\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "#######################################################\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "Hello, welcome to OSlab! I'm the body of the game. ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "Bootblock loads me to the memory position of 0x100000, and Makefile also tells me that I'm at the location of 0x100000. ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "~!@#$^&*()_+`1234567890-=...... ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "Now I will test your printk: ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "1 + 1 = 2, 123 * 456 = 56088\n0, -1, -2147483648, -1412505855, -32768, 102030\n0, ffffffff, 80000000, abcdef01, ffff8000, 18e8e\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "#######################################################\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "your answer:\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "=======================================================\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "%s %s%scome %co%s", "Hello,", "", "wel", 't', " ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "%c%c%c%c%c! ", 'O', 'S', 'l', 'a', 'b');
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "I'm the %s of %s. %s 0x%x, %s 0x%x. ", "body",
+                    "the game", "Bootblock loads me to the memory position of",
+                    0x100000, "and Makefile also tells me that I'm at the location of", 0x100000);
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "~!@#$^&*()_+`1234567890-=...... ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "Now I will test your printk: ");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "%d + %d = %d, %d * %d = %d\n", 1, 1, 1 + 1, 123, 456, 123 * 456);
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "%d, %d, %d, %d, %d, %d\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "=======================================================\n");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "Test end!!! Good luck!!!\n");
+  for (int i = 0; i < 400; ++i) count += vsprintf(out + count, size > count ? size - count : 0, "PLACEHOLDER");
+  count += vsprintf(out + count, size > count ? size - count : 0,
+                    "\nTest size excluding this line: %d\n", count);
+  return count;
 }
 
 // This is a (pseudo) library function but I'm lazy to create another file for it
@@ -76,15 +105,28 @@ void onClock() {
   NEXT_RANDOM;
 }
 
-int main() {
-  assert(!random);
-  int pid = sys_getpid();
-  printk("Process #%d is spawning children. Eww.\n", pid);
-  if ((pid = sys_fork()) > 0) {
-    printk("Process #%d is a new born children. How disgusting. Terminating.\n", pid);
-    sys_exit(0);
+__attribute__((__aligned__(PGSIZE)))
+static uint8_t sharedMem[PGSIZE];
+
+void process0() {
+  sys_mmap(sharedMem, 0);
+  int bufferMutex = sys_sem_open(0), fillCount = sys_sem_open(1), emptyCount = sys_sem_open(2);
+  sys_sem_post(emptyCount); // ready to take input
+  for (;;) {
+    printk("\n(parent process will now block and wait for input)\n");
+    sys_sem_wait(fillCount);
+    sys_sem_wait(bufferMutex);
+    if (!*sharedMem) break;
+    printk("%s", sharedMem);
+    sys_sem_post(bufferMutex);
+    sys_sem_post(emptyCount);
   }
-  // test_printk();
+  printk("\n(parent process has finished reading, starting game)\n");
+  sys_sem_post(bufferMutex);
+  sys_sem_post(emptyCount);
+  sys_sem_close(bufferMutex);
+  sys_sem_close(fillCount);
+  sys_sem_close(emptyCount);
 
   sys_listenKeyboard(onKeyboard);
   sys_listenClock(onClock);
@@ -92,4 +134,38 @@ int main() {
     sys_sleep(0x7fffffff);
     warn("sys_sleep(forever) returned. You really have run this program for too long.");
   }
+}
+
+void process1() {
+  printk("Child process is generating buffer to output.\n");
+  size_t count = test_printk(NULL, 0) + 1;
+  char buffer[count];
+  test_printk(buffer, count);
+  sys_mmap(sharedMem, 0);
+  int bufferMutex = sys_sem_open(0), fillCount = sys_sem_open(1), emptyCount = sys_sem_open(2);
+  for (size_t i = 0; i < count; i += PGSIZE - 1) {
+    sys_sem_wait(emptyCount);
+    sys_sem_wait(bufferMutex);
+    memcpy(sharedMem, buffer + i, PGSIZE - 1 + i > count ? PGSIZE - 1 + i - count : PGSIZE - 1);
+    sharedMem[PGSIZE - 1] = 0;
+    sys_sem_post(bufferMutex);
+    sys_sem_post(fillCount);
+  }
+  sys_sem_wait(emptyCount);
+  sys_sem_wait(bufferMutex);
+  sharedMem[0] = 0;
+  sys_sem_post(bufferMutex);
+  sys_sem_post(fillCount);
+  sys_sem_close(bufferMutex);
+  sys_sem_close(fillCount);
+  sys_sem_close(emptyCount);
+  sys_exit(0);
+}
+
+int main() {
+  assert(!random);
+  int bufferMutex = sys_sem_open(0);
+  sys_sem_post(bufferMutex);  // initialize *bufferMutex = 1
+  sys_sem_close(bufferMutex);
+  if (sys_fork() > 0) process1(); else process0();
 }

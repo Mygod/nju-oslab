@@ -13,6 +13,11 @@ enum {
   SYS_crash,
   SYS_getpid,
   SYS_fork,
+  SYS_sem_open,
+  SYS_sem_close,
+  SYS_sem_wait,
+  SYS_sem_post,
+  SYS_mmap,
 };
 
 typedef void (*KeyboardListener)(uint8_t), (*ClockListener)();
@@ -30,5 +35,10 @@ void sys_crash() __attribute__((noreturn));
 int sys_getpid();
 // It returns child pid for parent and -1 for children
 int sys_fork();
+int sys_sem_open(int sem);
+int sys_sem_close(int sem);
+int sys_sem_wait(int sem);
+int sys_sem_post(int sem);
+int sys_mmap(void *addr, int id);
 
 #endif

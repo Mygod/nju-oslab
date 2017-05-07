@@ -112,3 +112,26 @@ int sys_getpid() {
 int sys_fork() {
   return do_syscall0(SYS_fork);
 }
+
+int sys_sem_open(int sem) {
+  int result = do_syscall1(SYS_sem_open, (uint32_t) sem);
+  assert(result >= E_SUCCESS);
+  return result;
+}
+int sys_sem_close(int sem) {
+  assert(do_syscall1(SYS_sem_close, (uint32_t) sem) == E_SUCCESS);
+  return E_SUCCESS;
+}
+int sys_sem_wait(int sem) {
+  int result = do_syscall1(SYS_sem_wait, (uint32_t) sem);
+  assert(result >= E_SUCCESS);
+  return result;
+}
+int sys_sem_post(int sem) {
+  assert(do_syscall1(SYS_sem_post, (uint32_t) sem) == E_SUCCESS);
+  return E_SUCCESS;
+}
+int sys_mmap(void *addr, int id) {
+  assert(do_syscall2(SYS_mmap, (uint32_t) addr, (uint32_t) id) == E_SUCCESS);
+  return E_SUCCESS;
+}

@@ -5,6 +5,7 @@
 #include "x86.h"
 
 extern pde_t (*user_pgdir[PROCESS_POOL_SIZE])[NPDENTRIES];
+void pmap_init_process(int pid);
 void pmap_init();
 void pmap_copy(int dest, int src);
 static inline void pmap_load(int pid) {

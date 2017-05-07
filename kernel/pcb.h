@@ -10,6 +10,7 @@
 
 struct PCB {
   bool used;
+  int waitSem;
   uint64_t wakeTime;
   ClockListener clockListener;
   KeyboardListener keyboardListener;

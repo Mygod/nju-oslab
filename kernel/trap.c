@@ -75,10 +75,19 @@ void env_init() {
 }
 
 static bool halted;
+extern int sem_pool[];
 __attribute__((noreturn)) void sched() {
   for (int i = 1; i <= PROCESS_POOL_SIZE; ++i) {
     int pid = (current_pid + i) % PROCESS_POOL_SIZE;
-    if (pcb_pool[pid].used && pcb_pool[pid].wakeTime <= sys_time) pcb_exec(pid, &pcb_pool[pid]);
+    if (pcb_pool[pid].used && pcb_pool[pid].wakeTime <= sys_time) {
+      if (pcb_pool[pid].waitSem >= 0) {
+        if (sem_pool[pcb_pool[pid].waitSem]) {
+          --sem_pool[pcb_pool[pid].waitSem];
+          pcb_pool[pid].waitSem = -1;
+        } else continue;
+      }
+      pcb_exec(pid, &pcb_pool[pid]);
+    }
   }
   // Nothing else to schedule, wait for something to happen
   // We're now within kernel space so we need to move our pointer

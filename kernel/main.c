@@ -119,6 +119,7 @@ void i386_init() {
   irq_init(0xFFF8);
   env_init();
 
+  pmap_init_process(0);
   pcb_init(&pcb_pool[0], 0x8048000, userprog_load(0, 256 * SECTSIZE), FL_ALWAYS1 | FL_IF);
   pcb_exec(0, &pcb_pool[0]);
 }
