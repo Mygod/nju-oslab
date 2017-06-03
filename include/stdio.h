@@ -5,7 +5,7 @@
 
 char* itoa(int value, char *result);
 char* utoa(unsigned value, char* result, int base);
-size_t vsprintf(char *out, size_t size, const char *format, ...);
+size_t snprintf(char *out, size_t size, const char *format, ...);
 void printk(const char *format, ...);
 
 #endif

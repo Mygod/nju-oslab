@@ -82,7 +82,7 @@ static size_t vsnprintf(char *out, size_t size, const char *format, va_list args
   return counter;
 }
 
-size_t vsprintf(char *out, size_t size, const char *format, ...) {
+size_t snprintf(char *out, size_t size, const char *format, ...) {
   va_list args;
   va_start(args, format);
   size_t result = vsnprintf(out, size, format, args);

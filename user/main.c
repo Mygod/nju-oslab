@@ -5,52 +5,54 @@
 
 static size_t test_printk(char *out, size_t size) {
   size_t count = 0;
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "Printk test begin...\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "the answer should be:\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "#######################################################\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "Hello, welcome to OSlab! I'm the body of the game. ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count,
+                    size > count ? size - count : 0,
                     "Bootblock loads me to the memory position of 0x100000, and Makefile also tells me that I'm at the location of 0x100000. ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "~!@#$^&*()_+`1234567890-=...... ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "Now I will test your printk: ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count,
+                    size > count ? size - count : 0,
                     "1 + 1 = 2, 123 * 456 = 56088\n0, -1, -2147483648, -1412505855, -32768, 102030\n0, ffffffff, 80000000, abcdef01, ffff8000, 18e8e\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "#######################################################\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "your answer:\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "=======================================================\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "%s %s%scome %co%s", "Hello,", "", "wel", 't', " ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "%c%c%c%c%c! ", 'O', 'S', 'l', 'a', 'b');
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "I'm the %s of %s. %s 0x%x, %s 0x%x. ", "body",
                     "the game", "Bootblock loads me to the memory position of",
                     0x100000, "and Makefile also tells me that I'm at the location of", 0x100000);
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "~!@#$^&*()_+`1234567890-=...... ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "Now I will test your printk: ");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "%d + %d = %d, %d * %d = %d\n", 1, 1, 1 + 1, 123, 456, 123 * 456);
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "%d, %d, %d, %d, %d, %d\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "%x, %x, %x, %x, %x, %x\n", 0, 0xffffffff, 0x80000000, 0xabcedf01, -32768, 102030);
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "=======================================================\n");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "Test end!!! Good luck!!!\n");
-  for (int i = 0; i < 400; ++i) count += vsprintf(out + count, size > count ? size - count : 0, "PLACEHOLDER");
-  count += vsprintf(out + count, size > count ? size - count : 0,
+  for (int i = 0; i < 400; ++i) count += snprintf(out + count, size > count ? size - count : 0, "PLACEHOLDER");
+  count += snprintf(out + count, size > count ? size - count : 0,
                     "\nTest size excluding this line: %d\n", count);
   return count;
 }
