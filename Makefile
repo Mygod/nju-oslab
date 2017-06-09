@@ -1,8 +1,3 @@
-BOOT   := boot.bin
-KERNEL := kernel.bin
-USER   := user.bin
-IMAGE  := disk.bin
-
 CC      := gcc
 LD      := ld
 OBJCOPY := objcopy
@@ -18,6 +13,22 @@ CFLAGS += -I . -I include
 CFLAGS += -O0
 CFLAGS += -fno-builtin -fno-stack-protector
 CFLAGS += -ggdb3
+
+BIN_DIR        := bin
+OBJ_DIR        := obj
+LIB_DIR        := lib
+BOOT_DIR       := boot
+KERNEL_DIR     := kernel
+USER_DIR       := user
+OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
+OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
+OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
+OBJ_USER_DIR   := $(OBJ_DIR)/$(USER_DIR)
+
+BOOT   := $(BIN_DIR)/boot.bin
+KERNEL := $(BIN_DIR)/kernel.bin
+USER   := $(BIN_DIR)/user.bin
+IMAGE  := $(BIN_DIR)/disk.bin
 
 QEMU_OPTIONS := -serial stdio
 #QEMU_OPTIONS += -d int
@@ -41,16 +52,6 @@ GDB_OPTIONS += -ex "b _panic"
 GDB_OPTIONS += -ex "c"
 GDB_OPTIONS += -ex "layout split"
 
-OBJ_DIR        := obj
-LIB_DIR        := lib
-BOOT_DIR       := boot
-KERNEL_DIR     := kernel
-USER_DIR       := user
-OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
-OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
-OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
-OBJ_USER_DIR   := $(OBJ_DIR)/$(USER_DIR)
-
 LIB_C := $(wildcard $(LIB_DIR)/*.c)
 LIB_O := $(LIB_C:%.c=$(OBJ_DIR)/%.o)
 
@@ -69,16 +70,18 @@ USER_C := $(shell find $(USER_DIR) -name "*.c")
 USER_O := $(USER_C:%.c=$(OBJ_DIR)/%.o)
 
 $(IMAGE): $(BOOT) $(KERNEL) $(USER)
+	@mkdir -p $(BIN_DIR)
 	@$(DD) if=/dev/zero of=$(IMAGE) count=512           > /dev/null 2> /dev/null
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
 	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null 2> /dev/null
 	@$(DD) if=$(USER) of=$(IMAGE) seek=256 conv=notrunc > /dev/null 2> /dev/null
 
 $(BOOT): $(BOOT_O)
+	@mkdir -p $(BIN_DIR)
 	$(LD) -e start -Ttext=0x7C00 -m elf_i386 -nostdlib -o $@.out $^
 	$(OBJCOPY) --strip-all --only-section=.text --output-target=binary $@.out $@
 	@rm $@.out
-	@./make-mbr $@
+	@util/make-mbr $@
 
 $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.S
 	@mkdir -p $(OBJ_BOOT_DIR)
@@ -90,10 +93,12 @@ $(OBJ_BOOT_DIR)/%.o: $(BOOT_DIR)/%.c
 
 $(KERNEL): $(KERNEL_LD)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
 	$(LD) -m elf_i386 -T $(KERNEL_LD) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	@./make-kernel $@ 130560
+	@util/make-kernel $@ 130560
 
 $(USER): $(USER_O) $(LIB_O)
+	@mkdir -p $(BIN_DIR)
 	$(LD) -m elf_i386 -emain -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 $(OBJ_LIB_DIR)/%.o : $(LIB_DIR)/%.c
@@ -134,4 +139,4 @@ clean:
 
 STUNO?=archive
 submit:
-	@git ls-files | tar zcf $(STUNO).tar.gz .git -T -
+	@git ls-files | tar zcf $(BIN_DIR)/$(STUNO).tar.gz .git -T -

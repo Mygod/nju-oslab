@@ -1,6 +1,5 @@
-*.bin
 CMake*
 cmake*
 .idea/
+bin/
 obj/
-*.tar.gz
