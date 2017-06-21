@@ -11,6 +11,7 @@
 #define E_NOENT -7
 #define E_BADFD -8
 #define E_NOTIMPLEMENTED -9
+#define E_EMPTYPATH -10
 #define E_SYSCALL_NOT_FOUND 0x80000000
 
 #endif //OSLAB_ERROR_H

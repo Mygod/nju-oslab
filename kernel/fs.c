@@ -133,6 +133,7 @@ static inline int min(int a, int b) {
 }
 
 int fs_open(const char *pathname, int flags) {
+  if (!pathname || !*pathname) return E_EMPTYPATH;
   int x = -1;
   for (int i = 0; i < ENTRY_COUNT; ++i) {
     if (x < 0 && !dir[i].fileName[0]) x = i;
