@@ -110,6 +110,8 @@ void onClock() {
 __attribute__((__aligned__(PGSIZE)))
 static uint8_t sharedMem[PGSIZE];
 
+const char testFilename[] = "test.garbage";
+
 void process0() {
   sys_mmap(sharedMem, 0);
   int bufferMutex = sys_sem_open(0), fillCount = sys_sem_open(1), emptyCount = sys_sem_open(2);
@@ -123,12 +125,24 @@ void process0() {
     sys_sem_post(bufferMutex);
     sys_sem_post(emptyCount);
   }
-  printk("\n(parent process has finished reading, starting game)\n");
+  printk("\n(parent process has finished reading)\n");
   sys_sem_post(bufferMutex);
   sys_sem_post(emptyCount);
   sys_sem_close(bufferMutex);
   sys_sem_close(fillCount);
   sys_sem_close(emptyCount);
+
+  printk("Parent process reads file '%s': ", testFilename);
+  int fd = fs_open(testFilename, O_RDONLY), r;
+  fs_lseek(fd, 0, SEEK_SET);
+  char buffer[513];
+  while ((r = fs_read(fd, buffer, 512)) > 0) {
+    buffer[r] = 0;
+    printk("%s", buffer);
+  }
+  assert(!r);
+  assert(!fs_close(fd));
+  printk("\n");
 
   sys_listenKeyboard(onKeyboard);
   sys_listenClock(onClock);
@@ -139,6 +153,14 @@ void process0() {
 }
 
 void process1() {
+  printk("Child process is spawning garbage to '%s' file.\n", testFilename);
+  int fd = fs_open(testFilename, O_RDWR | O_CREAT);
+  if (fd < 0) {
+    printk("fs_open failed: %d\n", fd);
+    assert(0);
+  }
+  for (int i = 0; i < 123; ++i) fs_write(fd, "garble ", 7);
+  assert(!fs_close(fd));
   printk("Child process is generating buffer to output.\n");
   size_t count = test_printk(NULL, 0) + 1;
   char buffer[count];

@@ -83,6 +83,11 @@ int32_t syscall_dispatch(struct Trapframe *tf) {
     case SYS_sem_wait: return sys_sem_wait(arg1);
     case SYS_sem_post: return sys_sem_post(arg1);
     case SYS_mmap: return sys_mmap((void *) arg1, arg2);
+    case SYS_fs_open: return fs_open((const char *) arg1, arg2);
+    case SYS_fs_read: return fs_read(arg1, (void *) arg2, arg3);
+    case SYS_fs_write: return fs_write(arg1, (const void *) arg2, arg3);
+    case SYS_fs_lseek: return fs_lseek(arg1, arg2, arg3);
+    case SYS_fs_close: return fs_close(arg1);
     default: return E_SYSCALL_NOT_FOUND;
   }
 }

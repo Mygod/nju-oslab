@@ -45,6 +45,11 @@ int sys_sem_close(int sem);
 int sys_sem_wait(int sem);
 int sys_sem_post(int sem);
 int sys_mmap(void *addr, int id);
+int fs_open(const char *pathname, int flags);
+int fs_read(int fd, void *buf, int len);
+int fs_write(int fd, const void *buf, int len);
+int fs_lseek(int fd, int offset, int whence);
+int fs_close(int fd);
 
 #define O_RDONLY	     00
 #define O_RDWR		     02

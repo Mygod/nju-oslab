@@ -109,9 +109,9 @@ int fd_buffer_flush(int fd) {
   return 0;
 }
 int fd_buffer_fetch(int fd) {
-  assert(!(fdPool[fd].offset % SECTSIZE));
-  int r;
   if (fdPool[fd].state_buffer == STATE_UNINITIALIZED) {
+    assert(!(fdPool[fd].offset % SECTSIZE));
+    int r;
     if (!(fdPool[fd].offset % INODE_SIZE)) {
       TRY(fd_inode_flush(fd));
       fdPool[fd].state_inode = STATE_UNINITIALIZED;
@@ -183,7 +183,7 @@ int fs_read(int fd, void *buf, int len) {
   }
   return result;
 }
-int fs_write(int fd, void *buf, int len) {
+int fs_write(int fd, const void *buf, int len) {
   if (!fdPool[fd].open) return E_BADFD;
   if (!fdPool[fd].writable) return E_ACCESS;
   int result = 0, r;

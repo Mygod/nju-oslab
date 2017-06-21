@@ -135,3 +135,19 @@ int sys_mmap(void *addr, int id) {
   assert(do_syscall2(SYS_mmap, (uint32_t) addr, (uint32_t) id) == E_SUCCESS);
   return E_SUCCESS;
 }
+
+int fs_open(const char *pathname, int flags) {
+  return do_syscall2(SYS_fs_open, (uint32_t) pathname, (uint32_t) flags);
+}
+int fs_read(int fd, void *buf, int len) {
+  return do_syscall3(SYS_fs_read, (uint32_t) fd, (uint32_t) buf, (uint32_t) len);
+}
+int fs_write(int fd, const void *buf, int len) {
+  return do_syscall3(SYS_fs_write, (uint32_t) fd, (uint32_t) buf, (uint32_t) len);
+}
+int fs_lseek(int fd, int offset, int whence) {
+  return do_syscall3(SYS_fs_lseek, (uint32_t) fd, (uint32_t) offset, (uint32_t) whence);
+}
+int fs_close(int fd) {
+  return do_syscall1(SYS_fs_close, (uint32_t) fd);
+}
