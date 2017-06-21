@@ -145,7 +145,7 @@ gdb:
 
 fs-test: $(IMAGE) $(MYFS_READ)
 	$(MYFS_READ) $(IMAGE) kernel.bin > /tmp/test.bin && cmp -b $(KERNEL) /tmp/test.bin
-	$(MYFS_READ) $(IMAGE) user.bin   > /tmp/test.bin && cmp -b $(USER) /tmp/test.bin
+	$(MYFS_READ) $(IMAGE) user.bin   > /tmp/test.bin && cmp -b $(USER)   /tmp/test.bin
 
 clean:
 	@rm -rf $(BIN_DIR) 2> /dev/null
