@@ -1,8 +1,8 @@
 #include "elf.h"
 #include "x86.h"
+#include "kernel/fs.h"
 
 #define SECTSIZE 512
-#define SECTCOUNT 8
 
 static inline void memset(void *dest, int c, size_t s) {
   while (s--) *(uint8_t *) dest++ = (uint8_t) c;
@@ -16,41 +16,52 @@ waitdisk(void)
 }
 
 void
-readsect(void *dst, uint32_t offset, uint8_t count)
+readsect(void *dst, uint32_t offset)
 {
-  while (count--) {
-    // wait for disk to be ready
-    waitdisk();
+  // wait for disk to be ready
+  waitdisk();
 
-    outb(0x1F2, 1);
-    outb(0x1F3, (uint8_t) offset);    //address = offset | 0xe0000000
-    outb(0x1F4, (uint8_t) (offset >> 8));
-    outb(0x1F5, (uint8_t) (offset >> 16));
-    outb(0x1F6, (uint8_t) ((offset >> 24) | 0xE0));
-    outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
+  outb(0x1F2, 1);
+  outb(0x1F3, (uint8_t) offset);    //address = offset | 0xe0000000
+  outb(0x1F4, (uint8_t) (offset >> 8));
+  outb(0x1F5, (uint8_t) (offset >> 16));
+  outb(0x1F6, (uint8_t) ((offset >> 24) | 0xE0));
+  outb(0x1F7, 0x20);  // cmd 0x20 - read sectors
 
-    // wait for disk to be ready
-    waitdisk();
+  // wait for disk to be ready
+  waitdisk();
 
-    // read sectors
-    insl(0x1F0, dst, SECTSIZE/4);
-    dst += SECTSIZE;
-    ++offset;
-  }
+  // read sectors
+  insl(0x1F0, dst, SECTSIZE/4);
 }
 
 // dead loops are introduced for diagnosis
 void bootloader() {
-  uint8_t header[SECTSIZE * SECTCOUNT];
-  readsect(header, 1, SECTCOUNT);
+  INode inode;
+  uint8_t header[SECTSIZE];
+  int index_inode = 0;
+  readsect(&inode, FSOFFSET_DATA);  // assert: dir[0].inodeOffset = 0
+  readsect(header, FSOFFSET_DATA + inode.dataBlocks[0]);
   struct ELFHeader *elfheader = (struct ELFHeader *) header;
-  if (elfheader->magic != 0x464C457FU) for (;;);  // "\x7FELF" in little endian
+  // if (elfheader->magic != 0x464C457FU) for (;;);  // "\x7FELF" in little endian
   struct ProgramHeader *ph = (struct ProgramHeader *) (header + elfheader->phoff);
-  for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) {
-    if (ph->off & (SECTSIZE - 1)) for (;;);  // aligned at sector
-    int sectors = (ph->filesz + (SECTSIZE - 1)) / SECTSIZE;
-    if (sectors >= 256) for (;;);            // things can be read in one go
-    readsect((void *) ph->paddr, 1 + ph->off / SECTSIZE, (uint8_t) sectors);
+  for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) if (ph->memsz) {
+    // if (ph->off & (SECTSIZE - 1)) for (;;);  // aligned at sector
+    int i = ph->off / SECTSIZE / INODE_DATA_COUNT, count = 0;
+    // if (index_inode > i) for (;;);  // strictly increasing
+    while (index_inode < i) {
+      readsect(&inode, FSOFFSET_DATA + inode.next);
+      ++index_inode;
+    }
+    i = ph->off / SECTSIZE % INODE_DATA_COUNT;
+    while (count < ph->filesz) {
+      readsect((void *) (ph->paddr + count), FSOFFSET_DATA + inode.dataBlocks[i]);
+      if (++i >= INODE_DATA_COUNT) {
+        i = 0;
+        readsect(&inode, inode.next);
+      }
+      count += SECTSIZE;
+    }
     memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
   }
   ((void (*)()) elfheader->entry)();
