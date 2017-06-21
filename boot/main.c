@@ -1,10 +1,12 @@
 #include "elf.h"
 #include "x86.h"
 
-#include "lib/string.c"
-
 #define SECTSIZE 512
 #define SECTCOUNT 8
+
+static inline void memset(void *dest, int c, size_t s) {
+  while (s--) *(uint8_t *) dest++ = (uint8_t) c;
+}
 
 void
 waitdisk(void)

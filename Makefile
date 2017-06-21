@@ -5,11 +5,15 @@ DD      := dd
 QEMU    := qemu-system-i386
 GDB     := gdb
 
-CFLAGS := -Wall -Werror -Wfatal-errors
-CFLAGS += -Wno-unknown-pragmas -Wno-error=unknown-pragmas
+CFLAGS_SHORT := -Wall -Werror -Wfatal-errors
+CFLAGS_SHORT += -Wno-unknown-pragmas -Wno-error=unknown-pragmas
+CFLAGS_SHORT += -std=gnu11 -m32
+CFLAGS_SHORT += -I .
+
+CFLAGS := $(CFLAGS_SHORT)
 CFLAGS += -MD
-CFLAGS += -std=gnu11 -m32 -c
-CFLAGS += -I . -I include
+CFLAGS += -c
+CFLAGS += -I include
 CFLAGS += -O0
 CFLAGS += -fno-builtin -fno-stack-protector
 CFLAGS += -ggdb3
@@ -20,6 +24,9 @@ LIB_DIR        := lib
 BOOT_DIR       := boot
 KERNEL_DIR     := kernel
 USER_DIR       := user
+UTIL_DIR       := util
+MYFS_READ      := $(BIN_DIR)/myfs_read
+MYFS_WRITE     := $(BIN_DIR)/myfs_write
 OBJ_LIB_DIR    := $(OBJ_DIR)/$(LIB_DIR)
 OBJ_BOOT_DIR   := $(OBJ_DIR)/$(BOOT_DIR)
 OBJ_KERNEL_DIR := $(OBJ_DIR)/$(KERNEL_DIR)
@@ -69,12 +76,14 @@ KERNEL_O += $(KERNEL_S:%.S=$(OBJ_DIR)/%.o)
 USER_C := $(shell find $(USER_DIR) -name "*.c")
 USER_O := $(USER_C:%.c=$(OBJ_DIR)/%.o)
 
-$(IMAGE): $(BOOT) $(KERNEL) $(USER)
+all: $(IMAGE) $(MYFS_READ)
+
+$(IMAGE): $(BOOT) $(KERNEL) $(USER) $(MYFS_WRITE)
 	@mkdir -p $(BIN_DIR)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=512           > /dev/null 2> /dev/null
+	@$(DD) if=/dev/zero of=$(IMAGE) count=4099          > /dev/null 2> /dev/null
 	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
-	@$(DD) if=$(KERNEL) of=$(IMAGE) seek=1 conv=notrunc > /dev/null 2> /dev/null
-	@$(DD) if=$(USER) of=$(IMAGE) seek=256 conv=notrunc > /dev/null 2> /dev/null
+	@$(MYFS_WRITE) $(IMAGE) kernel.bin                  < $(KERNEL)
+	@$(MYFS_WRITE) $(IMAGE) user.bin                    < $(USER)
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)
@@ -95,7 +104,6 @@ $(KERNEL): $(KERNEL_LD)
 $(KERNEL): $(KERNEL_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
 	$(LD) -m elf_i386 -T $(KERNEL_LD) -nostdlib -o $@ $^ $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
-	@util/make-kernel $@ 130560
 
 $(USER): $(USER_O) $(LIB_O)
 	@mkdir -p $(BIN_DIR)
@@ -112,6 +120,10 @@ $(OBJ_KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.[cS]
 $(OBJ_USER_DIR)/%.o: $(USER_DIR)/%.c
 	mkdir -p $(OBJ_DIR)/$(dir $<)
 	$(CC) $(CFLAGS) $< -o $@
+
+$(BIN_DIR)/myfs_%: $(UTIL_DIR)/myfs_%.c $(UTIL_DIR)/common.c $(OBJ_KERNEL_DIR)/fs.o
+	mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS_SHORT) $^ -o $@
 
 DEPS := $(shell find -name "*.d")
 -include $(DEPS)
@@ -131,7 +143,12 @@ debug: $(IMAGE)
 gdb:
 	$(GDB) $(GDB_OPTIONS)
 
+fs-test: $(IMAGE) $(MYFS_READ)
+	$(MYFS_READ) $(IMAGE) kernel.bin > /tmp/test.bin && cmp -b $(KERNEL) /tmp/test.bin
+	$(MYFS_READ) $(IMAGE) user.bin   > /tmp/test.bin && cmp -b $(USER) /tmp/test.bin
+
 clean:
+	@rm -rf $(BIN_DIR) 2> /dev/null
 	@rm -rf $(OBJ_DIR) 2> /dev/null
 	@rm -rf $(BOOT)    2> /dev/null
 	@rm -rf $(KERNEL)  2> /dev/null

@@ -18,6 +18,11 @@ enum {
   SYS_sem_wait,
   SYS_sem_post,
   SYS_mmap,
+  SYS_fs_open,
+  SYS_fs_read,
+  SYS_fs_write,
+  SYS_fs_lseek,
+  SYS_fs_close,
 };
 
 typedef void (*KeyboardListener)(uint8_t), (*ClockListener)();
@@ -40,5 +45,12 @@ int sys_sem_close(int sem);
 int sys_sem_wait(int sem);
 int sys_sem_post(int sem);
 int sys_mmap(void *addr, int id);
+
+#define O_RDONLY	     00
+#define O_RDWR		     02
+#define O_CREAT	       0100
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 
 #endif

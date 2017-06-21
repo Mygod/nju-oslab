@@ -9,4 +9,5 @@ if obj.size <= 510
     obj.write("\xaa")
 else
     puts "#{ARGV[0]}'s size is too large"
+    Kernel.exit(1)
 end

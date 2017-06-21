@@ -95,7 +95,7 @@ extern void env_init();
 #define SECTCOUNT 1
 uintptr_t userprog_load(int pid, uint32_t offset) {
   uint8_t header[SECTSIZE * SECTCOUNT];
-  assert(ide_read(header, offset, SECTSIZE * SECTCOUNT) == E_SUCCESS);
+  assert(ide_read(offset, header, SECTSIZE * SECTCOUNT) == E_SUCCESS);
   struct ELFHeader *elfheader = (struct ELFHeader *) header;
   assert(elfheader->magic == 0x464C457FU);  // "\x7FELF" in little endian
   assert(elfheader->phoff + elfheader->phnum * sizeof(struct ProgramHeader) <= SECTSIZE * SECTCOUNT);
@@ -103,7 +103,7 @@ uintptr_t userprog_load(int pid, uint32_t offset) {
   pmap_load(pid);
   for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) if (ph->type == 1) { // ELF_PROG_LOAD
     assert(ph->paddr >= 0x8000000 && ph->paddr + ph->memsz <= 0x8400000); // our static allocation have to work!
-    assert(ide_read((void *) ph->paddr, offset + ph->off, ph->filesz) == E_SUCCESS);
+    assert(ide_read(offset + ph->off, (void *) ph->paddr, ph->filesz) == E_SUCCESS);
     memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
   }
   return elfheader->entry;
@@ -119,6 +119,8 @@ void i386_init() {
   irq_init(0xFFF8);
   env_init();
 
+  printk("Okay!\n");
+  for (;;); // lala
   pmap_init_process(0);
   pcb_init(&pcb_pool[0], 0x8048000, userprog_load(0, 256 * SECTSIZE), FL_ALWAYS1 | FL_IF);
   pcb_exec(0, &pcb_pool[0]);
