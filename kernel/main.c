@@ -8,6 +8,7 @@
 #include "string.h"
 #include "serial.h"
 
+#include "kernel/fs.h"
 #include "kernel/pcb.h"
 
 #define IRQ_SLAVE 2
@@ -93,9 +94,14 @@ static inline void pit_init() {
 extern void env_init();
 
 #define SECTCOUNT 1
-uintptr_t userprog_load(int pid, uint32_t offset) {
-  uint8_t header[SECTSIZE * SECTCOUNT];
-  assert(ide_read(offset, header, SECTSIZE * SECTCOUNT) == E_SUCCESS);
+uintptr_t userprog_load(int pid, const char *filename) {
+  uint8_t header[SECTSIZE];
+  int fd = fs_open(filename, O_RDONLY);
+  if (fd < 0) {
+    printk("fs_open failed: %d\n", fd);
+    assert(0);
+  }
+  assert(fs_read(fd, header, SECTSIZE * SECTCOUNT) == SECTSIZE * SECTCOUNT);
   struct ELFHeader *elfheader = (struct ELFHeader *) header;
   assert(elfheader->magic == 0x464C457FU);  // "\x7FELF" in little endian
   assert(elfheader->phoff + elfheader->phnum * sizeof(struct ProgramHeader) <= SECTSIZE * SECTCOUNT);
@@ -103,9 +109,13 @@ uintptr_t userprog_load(int pid, uint32_t offset) {
   pmap_load(pid);
   for (int phnum = elfheader->phnum; phnum > 0; --phnum, ++ph) if (ph->type == 1) { // ELF_PROG_LOAD
     assert(ph->paddr >= 0x8000000 && ph->paddr + ph->memsz <= 0x8400000); // our static allocation have to work!
-    assert(ide_read(offset + ph->off, (void *) ph->paddr, ph->filesz) == E_SUCCESS);
+    if (ph->filesz) {
+      fs_lseek(fd, ph->off, SEEK_SET);
+      assert(fs_read(fd, (void *) ph->paddr, ph->filesz) == ph->filesz);
+    }
     memset((void *) (ph->paddr + ph->filesz), 0, ph->memsz - ph->filesz);
   }
+  assert(!fs_close(fd));
   return elfheader->entry;
 }
 
@@ -118,10 +128,9 @@ void i386_init() {
   // Interrupt 2: Slave 8259A
   irq_init(0xFFF8);
   env_init();
+  fs_init();
 
-  printk("Okay!\n");
-  for (;;); // lala
   pmap_init_process(0);
-  pcb_init(&pcb_pool[0], 0x8048000, userprog_load(0, 256 * SECTSIZE), FL_ALWAYS1 | FL_IF);
+  pcb_init(&pcb_pool[0], 0x8048000, userprog_load(0, "user.bin"), FL_ALWAYS1 | FL_IF);
   pcb_exec(0, &pcb_pool[0]);
 }
