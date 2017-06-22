@@ -80,10 +80,9 @@ all: $(IMAGE) $(MYFS_READ)
 
 $(IMAGE): $(BOOT) $(KERNEL) $(USER) $(MYFS_WRITE)
 	@mkdir -p $(BIN_DIR)
-	@$(DD) if=/dev/zero of=$(IMAGE) count=4099          > /dev/null 2> /dev/null
-	@$(DD) if=$(BOOT) of=$(IMAGE) conv=notrunc          > /dev/null 2> /dev/null
-	@$(MYFS_WRITE) $(IMAGE) kernel.bin                  < $(KERNEL)
-	@$(MYFS_WRITE) $(IMAGE) user.bin                    < $(USER)
+	@util/myfs_format $(IMAGE) $(BOOT)
+	@$(MYFS_WRITE) $(IMAGE) kernel.bin < $(KERNEL)
+	@$(MYFS_WRITE) $(IMAGE) user.bin   < $(USER)
 
 $(BOOT): $(BOOT_O)
 	@mkdir -p $(BIN_DIR)

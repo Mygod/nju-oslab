@@ -1,0 +1,3 @@
+#!/bin/sh
+dd if=/dev/zero of=$1 count=4099 > /dev/null 2> /dev/null
+dd if=$2 of=$1 conv=notrunc      > /dev/null 2> /dev/null
